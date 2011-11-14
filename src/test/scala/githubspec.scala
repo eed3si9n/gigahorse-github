@@ -8,59 +8,62 @@ class GithubSpec extends Specification { def is =
   "This is a specification to check the github handler"                       ^
                                                                               p^
   "`git_refs` should"                                                         ^
-    "return references"                                                       ! references1^
-    "return a reference with object"                                          ! references2^
+    "return a json array that can be parsed using `Response.git_refs`"        ! references1^
                                                                               p^                                                                                                                                              
   "`git_refs.head(\"master\")` should"                                        ^
-    "return a reference with object"                                          ! references3^
+    "return a json object that can be parsed using `Response.git_ref`"        ! reference1^
                                                                               p^
   "`git_commit(:sha)` should"                                                 ^
-    "return a commit"                                                         ! commit1^
-    "return a commit that can be parsed manually"                             ! commit2^    
+    "return a json object that can be parsed using `Response.git_commit`"     ! commit1^
+    "return a json object that can be parsed manually"                        ! commit2^    
                                                                               p^
-  "`git_refs.head(\"master\").git_object.url` should"                         ^
-    "return a commit"                                                         ! commit3^                                                                              
+  "`git_commit(git_ref)` should"                                              ^
+    "return a commit json object for the given `GitRef`"                      ! commit3^                                                                              
                                                                               p^
   "`git_trees(:sha)` should"                                                  ^
-    "return trees"                                                            ! trees1^
+    "return a json object that can be parsed using `Response.git_trees`"      ! trees1^
                                                                               p^
   "`git_trees(:sha).recursive(10)` should"                                    ^
-    "return trees recursively"                                                ! recursive1^
+    "return a json object that contains subdir blobs"                         ! recursive1^
                                                                               p^
   "`git_trees(commit)` should"                                                ^
-      "return trees"                                                          ! trees2^
+      "return a tree json object for the given `GitCommit`"                   ! trees2^
                                                                               p^
   "`git_blob(:sha)` should"                                                   ^
-      "return a blob"                                                         ! blob1^                                                                               
+      "return a json object that can be parsed using `Response.git_blob`"     ! blob1^                                                                               
                                                                               end
   
   def references1: MatchResult[Any] = withHttp { http =>
-    // this returns a seqence of GitRef case class
+    // `Client(Repos(user, repo).git_refs)` constructs a request to
+    // https://api.github.com/repos/dispatch/dispatch/git/refs
+    // Returned json array can then be parsed using `Response.git_refs`,  
+    // which returns a seqence of GitRef case classes
     val refs = http(Client(Repos(user, repo).git_refs) ># Response.git_refs)
-    refs must have (_.ref == "refs/heads/master")
-  }
-  
-  def references2: MatchResult[Any] = withHttp { http =>
-    // this returns a seqence of GitRef case class
-    val refs = http(Client(Repos(user, repo).git_refs) ># Response.git_refs)
+    
     val master = (refs find {_.ref == "refs/heads/master"}).head
     master.git_object.type_str must_== "commit"
   }
   
-  def references3: MatchResult[Any] = withHttp { http =>
-    // this returns a GitRef case class
+  def reference1: MatchResult[Any] = withHttp { http =>
+    // `Client(Repos(user, repo).git_refs.head("master")` constructs a request to
+    // https://api.github.com/repos/dispatch/dispatch/git/refs/heads/master
+    // Returned json object can then be parsed using `Response.git_ref`,
+    // which returns a GitRef case class
     val master = http(Client(Repos(user, repo).git_refs.head("master")) ># Response.git_ref)
     master.git_object.type_str must_== "commit"
   }
   
   def commit1: MatchResult[Any] = withHttp { http =>
-    // this returns a GitCommit case class
+    // `Client(Repos(user, repo).git_commit(commit_sha))` constructs a request to
+    // https://api.github.com/repos/dispatch/dispatch/git/commits/02d638afcd5b155a335db2e8262ffd852290c17c
+    // Returned json object can then be parsed using `Response.git_commit`,
+    // which returns a GitCommit case class
     val commit = http(Client(Repos(user, repo).git_commit(commit_sha)) ># Response.git_commit)
     commit.committer.name must_== "softprops"
   }
   
   def commit2: MatchResult[Any] = withHttp { http =>
-    // this returns String
+    // Returned json object can also be parsed field-by-field using an extractor
     val msg = http(Client(Repos(user, repo).git_commit(commit_sha)) ># { js =>
       import GitCommit._
       message(js)
@@ -78,7 +81,10 @@ class GithubSpec extends Specification { def is =
   }
       
   def trees1: MatchResult[Any] = withHttp { http =>
-    // this returns a seqence of GitTree case class
+    // `Client(Repos(user, repo).git_trees(tree_sha))` constructs a request to
+    // https://api.github.com/repos/dispatch/dispatch/git/trees/563c7dcea4bbb71e49313e92c01337a0a4b7ce72
+    // Returned json object can then be parsed using `Reponse.git_trees`,
+    // which returns a seqence of GitTree case class
     val trees = http(Client(Repos(user, repo).git_trees(tree_sha)) ># Response.git_trees)
     trees must have (_.path == ".gitignore")
   }
@@ -99,8 +105,13 @@ class GithubSpec extends Specification { def is =
   }
   
   def blob1: MatchResult[Any] = withHttp { http =>
-    // this returns a GitBlob case class
+    // `Client(Repos(user, repo).git_blob(blob_sha))` constructs a request to
+    // https://api.github.com/repos/dispatch/dispatch/git/blobs/fb4c8b459f05bcc5296d9c13a3f6757597786f1d
+    // Returned json object can then be parsed using `Response.git_blob`,
+    // which returns a GitBlob case class
     val blob = http(Client(Repos(user, repo).git_blob(blob_sha)) ># Response.git_blob)
+    
+    // `as_utf8` method makes the assumption that the contained content is encoded in UTF-8.
     (blob.as_utf8 startsWith ".classpath") must_== true
   }
   
