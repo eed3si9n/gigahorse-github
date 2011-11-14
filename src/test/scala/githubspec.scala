@@ -16,9 +16,10 @@ class GithubSpec extends Specification { def is =
                                                                               p^
   "`git_commit(:sha)` should"                                                 ^
     "return a commit"                                                         ! commit1^
+    "return a commit that can be parsed manually"                             ! commit2^    
                                                                               p^
   "`git_refs.head(\"master\").git_object.url` should"                         ^
-    "return a commit"                                                         ! commit2^                                                                              
+    "return a commit"                                                         ! commit3^                                                                              
                                                                               p^
   "`git_trees(:sha)` should"                                                  ^
     "return trees"                                                            ! trees1^
@@ -56,6 +57,15 @@ class GithubSpec extends Specification { def is =
   }
   
   def commit2: MatchResult[Any] = withHttp { http =>
+    // this returns String
+    val msg = http(Client(Repos(user, repo).git_commit(commit_sha)) ># { js =>
+      import GitCommit._
+      message(js)
+    })
+    msg.head.startsWith("add") must_== true
+  }
+  
+  def commit3: MatchResult[Any] = withHttp { http =>
     // this returns a GitRef case class
     val master = http(Client(Repos(user, repo).git_refs.head("master")) ># Response.git_ref)
     
@@ -63,7 +73,7 @@ class GithubSpec extends Specification { def is =
     val commit = http(Client(Repos(user, repo).git_commit(master)) ># Response.git_commit)
     commit.sha must_== master.git_object.sha
   }
-  
+      
   def trees1: MatchResult[Any] = withHttp { http =>
     // this returns a seqence of GitTree case class
     val trees = http(Client(Repos(user, repo).git_trees(tree_sha)) ># Response.git_trees)
