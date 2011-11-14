@@ -30,14 +30,10 @@ trait Method[T] extends MethodBuilder {
   def default_handler: Request => Handler[T]
 }
 
-trait QueryMethod extends Method[(List[JValue],List[JValue])] {
-  def default_handler = _ ># (Response.results ~ Response.meta)
-}
 trait ResourceMethod extends Method[JValue] {
   def default_handler = _ ># identity[JValue]
 }
 
-object Response {
-  val results = 'results ? ary
-  val meta = 'meta ? obj
-}
+// trait QueryMethod extends Method[(List[JValue],List[JValue])] {
+//   def default_handler = _ ># (Response.results ~ Response.meta)
+// }
