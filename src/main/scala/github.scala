@@ -15,11 +15,15 @@ object Trees {
   val tree = 'tree ? ary
   
   def fromJson(json: JValue): Seq[Tree] = tree(json) map {Tree.fromJson}    
-  def apply(repo: Repos, sha: String) = new Trees(repo, sha)
+  def apply(repo: Repos, sha: String) = new Trees(repo, sha, Map())
 }
 
-class Trees(val repo: Repos, val sha: String) extends ResourceMethod {
-  def complete = repo.complete(_) / "git" / "trees" / sha
+class Trees(val repo: Repos, val sha: String, val params: Map[String, String]) extends ResourceMethod {
+  private def param(key: String)(value: Any): Trees = new Trees(repo, sha, params + (key -> value.toString))
+  
+  val recursive = param("recursive")_
+  
+  def complete = repo.complete(_) / "git" / "trees" / sha <<? params
 }
 
 object Tree {
