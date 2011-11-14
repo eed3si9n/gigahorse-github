@@ -5,7 +5,7 @@ import dispatch.Request._
 import dispatch.liftjson.Js._
 import net.liftweb.json._
 
-/** represents a github repository */
+/** represents a github repository from the request-side */
 case class Repos(user: String, name: String) extends ResourceMethod {
   def git_refs = GitRefs(this, None)
   def git_commit(ref: GitRef): GitCommits = GitCommits(this, ref.git_object.sha)
@@ -31,7 +31,9 @@ object GitRefs {
     } yield GitRef(v)
 }
 
-/** http://developer.github.com/v3/git/refs/ */
+/** represents git reference request.
+ * @see http://developer.github.com/v3/git/refs/ 
+ */
 case class GitRefs(repo: Repos, branch: Option[String]) extends ResourceMethod {
   def head(branch: String): GitRefs = copy(branch = Some(branch))
   
@@ -66,12 +68,16 @@ object GitRef extends Parsers {
     type_str: String)
 }
 
-/** http://developer.github.com/v3/git/refs/ */
+/** represents git reference response.
+ * @see http://developer.github.com/v3/git/refs/
+ */
 case class GitRef(ref: String,
   url: String,
   git_object: GitRef.GitObject)
 
-/** http://developer.github.com/v3/git/commits/ */
+/** represents git commit request.
+ * @see http://developer.github.com/v3/git/commits/
+ */
 case class GitCommits(repo: Repos, sha: String) extends ResourceMethod {
   def complete = repo.complete(_) / "git" / "commits" / sha
 }
@@ -109,7 +115,9 @@ object GitCommit extends Parsers {
     email: String)
 }
 
-/** http://developer.github.com/v3/git/commits/ */
+/** represents git commit response.
+ * @see http://developer.github.com/v3/git/commits/
+ */
 case class GitCommit(sha: String,
   url: String,
   author: GitCommit.GitUser,
@@ -135,7 +143,9 @@ object GitTrees {
   def fromJson(json: JValue): Seq[GitTree] = tree(json) map {GitTree(_)}
 }
 
-/* http://developer.github.com/v3/git/trees/ */
+/** represents git tree request.
+ * @see http://developer.github.com/v3/git/trees/
+ */
 case class GitTrees(repo: Repos, sha: String, params: Map[String, String] = Map()) extends ResourceMethod {
   private def param(key: String)(value: Any): GitTrees = copy(params = params + (key -> value.toString))
   
@@ -154,7 +164,9 @@ object GitTree extends Parsers {
       size = size(json).headOption)
 }
 
-/* http://developer.github.com/v3/git/trees/ */
+/** represents git tree response
+ * @see http://developer.github.com/v3/git/trees/
+ */
 case class GitTree(sha: String,
   url: String,
   path: String,
