@@ -12,6 +12,7 @@ case class Repos(user: String, name: String) extends ResourceMethod {
   def git_commit(sha: String): GitCommits = GitCommits(this, sha)
   def git_trees(commit: GitCommit): GitTrees = GitTrees(this, commit.tree.sha)
   def git_trees(sha: String): GitTrees = GitTrees(this, sha)
+  def git_blob(sha: String): GitBlobs = GitBlobs(this, sha)
   
   def complete = _ / "repos" / user / name
 }
@@ -21,6 +22,48 @@ object Response {
   val git_refs = GitRefs.fromJson _
   val git_commit = GitCommit.fromJson _
   val git_trees = GitTrees.fromJson _
+  val git_blob = GitBlob.fromJson _
+}
+
+/** represents git blob request.
+ * @see http://developer.github.com/v3/git/blobs/
+ */
+case class GitBlobs(repo: Repos, sha: String) extends ResourceMethod {
+  def complete = repo.complete(_) / "git" / "blobs" / sha
+}
+
+object GitBlob extends Parsers {
+  def fromJson(json: JValue): GitBlob = GitBlob(json)
+  
+  def apply(json: JValue): GitBlob =
+    GitBlob(sha = sha(json).head,
+      url = url(json).head,
+      encoding = encoding(json).head,
+      content = content(json).head,
+      size = size(json).head)
+}
+
+/** represents git blob response.
+ * @see http://developer.github.com/v3/git/blobs/
+ */
+case class GitBlob(sha: String,
+  url: String,
+  encoding: String,
+  content: String,
+  size: BigInt) {
+  def as_str(charset: String): String =
+    encoding match {
+      case "base64" => new String(bytes, charset)
+      case _ => content
+    }
+    
+  def as_utf8: String = as_str("UTF-8")
+  
+  def bytes: Array[Byte] =
+    encoding match {
+      case "utf-8" => content.getBytes
+      case "base64" => (new sun.misc.BASE64Decoder()).decodeBuffer(content)
+    }
 }
 
 object GitRefs {
@@ -187,6 +230,8 @@ private[github] trait Parsers {
   val name = 'name ? str
   val email = 'email ? str
   val date_str = 'date ? str
+  val encoding = 'encoding ? str
+  val content = 'content ? str
   val parse_date = { json: JValue =>
     date_str(json) map { s =>
       val nocolon = if (s.length == 25 && s(22) == ':') s.slice(0, 22) + s.slice(23, 25)

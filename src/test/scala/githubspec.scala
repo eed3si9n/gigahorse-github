@@ -28,7 +28,10 @@ class GithubSpec extends Specification { def is =
     "return trees recursively"                                                ! recursive1^
                                                                               p^
   "`git_trees(commit)` should"                                                ^
-      "return trees"                                                          ! trees2^                       
+      "return trees"                                                          ! trees2^
+                                                                              p^
+  "`git_blob(:sha)` should"                                                   ^
+      "return a blob"                                                         ! blob1^                                                                               
                                                                               end
   
   def references1: MatchResult[Any] = withHttp { http =>
@@ -95,6 +98,12 @@ class GithubSpec extends Specification { def is =
     trees must have (_.path == "twitter/src/main/scala/dispatch/Twitter.scala")
   }
   
+  def blob1: MatchResult[Any] = withHttp { http =>
+    // this returns a GitBlob case class
+    val blob = http(Client(Repos(user, repo).git_blob(blob_sha)) ># Response.git_blob)
+    (blob.as_utf8 startsWith ".classpath") must_== true
+  }
+  
   def withHttp[A](f: Http => A): A = {
     val http = new Http
     try {   
@@ -108,4 +117,5 @@ class GithubSpec extends Specification { def is =
   val repo = "dispatch"
   val tree_sha = "563c7dcea4bbb71e49313e92c01337a0a4b7ce72"
   val commit_sha = "02d638afcd5b155a335db2e8262ffd852290c17c"
+  val blob_sha = "fb4c8b459f05bcc5296d9c13a3f6757597786f1d"
 }
