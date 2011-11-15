@@ -30,7 +30,10 @@ class GithubSpec extends Specification { def is =
       "return a tree json object for the given `GitCommit`"                   ! trees2^
                                                                               p^
   "`git_blob(:sha)` should"                                                   ^
-      "return a json object that can be parsed using `Response.git_blob`"     ! blob1^                                                                               
+      "return a json object that can be parsed using `Response.git_blob`"     ! blob1^
+                                                                              p^
+  "`git_blob(:sha).raw` should"                                               ^
+      "return raw blob bytes"                                                 ! raw1^                                                                                    
                                                                               end
   
   def references1: MatchResult[Any] = withHttp { http =>
@@ -113,6 +116,16 @@ class GithubSpec extends Specification { def is =
     
     // `as_utf8` method makes the assumption that the contained content is encoded in UTF-8.
     (blob.as_utf8 startsWith ".classpath") must_== true
+  }
+  
+  def raw1: MatchResult[Any] = withHttp { http =>
+    // `Client(Repos(user, repo).git_blob(blob_sha).raw)` constructs a request to
+    // https://api.github.com/repos/dispatch/dispatch/git/blobs/fb4c8b459f05bcc5296d9c13a3f6757597786f1d
+    // with "application/vnd.github.raw" as http Accept header.
+    // This returns raw bytes. You are responsible for figuring out the charset.
+    val raw = http(Client(Repos(user, repo).git_blob(blob_sha).raw) as_str)
+    
+    (raw startsWith ".classpath") must_== true
   }
   
   def withHttp[A](f: Http => A): A = {

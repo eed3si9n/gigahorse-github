@@ -12,7 +12,7 @@ case class Repos(user: String, name: String) extends ResourceMethod {
   def git_commit(sha: String): GitCommits = GitCommits(this, sha)
   def git_trees(commit: GitCommit): GitTrees = GitTrees(this, commit.tree.sha)
   def git_trees(sha: String): GitTrees = GitTrees(this, sha)
-  def git_blob(sha: String): GitBlobs = GitBlobs(this, sha)
+  def git_blob(sha: String): GitBlobs = GitBlobs(this, sha, None)
   
   def complete = _ / "repos" / user / name
 }
@@ -28,8 +28,16 @@ object Response {
 /** represents git blob request.
  * @see http://developer.github.com/v3/git/blobs/
  */
-case class GitBlobs(repo: Repos, sha: String) extends ResourceMethod {
-  def complete = repo.complete(_) / "git" / "blobs" / sha
+case class GitBlobs(repo: Repos, sha: String, mime: Option[String]) extends ResourceMethod {
+  def raw = copy(mime = Some("application/vnd.github.raw"))
+  
+  val complete = { req: Request =>
+    val request = repo.complete(req) / "git" / "blobs" / sha
+    mime match {
+      case Some(x) => request <:< Map("Accept" -> x) 
+      case _ => request
+    }
+  }
 }
 
 object GitBlob extends Parsers {
