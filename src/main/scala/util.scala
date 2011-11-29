@@ -9,13 +9,38 @@ import net.liftweb.json._
 abstract class AbstractClient extends ((Request => Request) => Request) {
   def hostname = "api.github.com"
   def host: Request
-  def handle[T](method: Method[T]) =
-    method.default_handler(apply(method))
+  def handle[T](method: Method[T]) = method.default_handler(apply(method))
+  def apply(block: Request => Request): Request = block(host)  
+}
+
+case object NoAuthClient extends AbstractClient {
+  val host = :/(hostname).secure
+}
+
+case class BasicAuthClient(user: String, pass: String) extends AbstractClient {
+  val host = :/(hostname).secure as_! (user, pass)
 }
 
 case object Client extends AbstractClient {
-  val host = :/(hostname).secure
-  def apply(block: Request => Request): Request = block(host)
+  def host = underlying.host
+  
+  lazy val underlying = credentials map { case (user, pass) =>
+    BasicAuthClient(user, pass) } getOrElse NoAuthClient
+  
+  lazy val credentials: Option[(String, String)] =
+    gitConfig("github.user") flatMap { user =>
+      gitConfig("github.password") map { pass =>
+        (user, pass)
+      }
+    }
+  
+  // https://github.com/defunkt/gist/blob/master/lib/gist.rb#L237
+  def gitConfig(key: String): Option[String] =
+    Option(System.getenv(key.toUpperCase.replaceAll("""\.""", "_"))) map { Some(_) } getOrElse {
+      val p = new java.lang.ProcessBuilder("git", "config", "--global", key).start()
+      val reader = new java.io.BufferedReader(new java.io.InputStreamReader(p.getInputStream))
+      Option(reader.readLine)
+    }
 }
 
 object OAuth {
@@ -39,7 +64,7 @@ object OAuth {
 
 case class OAuthClient(token: String) extends AbstractClient {
   val host = :/(hostname).secure
-  def apply(block: Request => Request): Request = block(host) <<? Map("access_token" -> token)
+  override def apply(block: Request => Request): Request = block(host) <<? Map("access_token" -> token)
 }
 
 trait MethodBuilder extends Builder[Request => Request] {

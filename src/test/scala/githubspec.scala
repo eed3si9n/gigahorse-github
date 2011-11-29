@@ -41,7 +41,7 @@ class GithubSpec extends Specification { def is =
     // https://api.github.com/repos/dispatch/dispatch/git/refs
     // Returned json array can then be parsed using `Response.git_refs`,  
     // which returns a seqence of GitRef case classes
-    val refs = http(Client(Repos(user, repo).git_refs) ># Response.git_refs)
+    val refs = http(NoAuthClient(Repos(user, repo).git_refs) ># Response.git_refs)
     
     val master = (refs find {_.ref == "refs/heads/master"}).head
     master.git_object.type_str must_== "commit"
@@ -52,7 +52,7 @@ class GithubSpec extends Specification { def is =
     // https://api.github.com/repos/dispatch/dispatch/git/refs/heads/master
     // Returned json object can then be parsed using `Response.git_ref`,
     // which returns a GitRef case class
-    val master = http(Client(Repos(user, repo).git_refs.head("master")) ># Response.git_ref)
+    val master = http(NoAuthClient(Repos(user, repo).git_refs.head("master")) ># Response.git_ref)
     master.git_object.type_str must_== "commit"
   }
   
@@ -61,13 +61,13 @@ class GithubSpec extends Specification { def is =
     // https://api.github.com/repos/dispatch/dispatch/git/commits/02d638afcd5b155a335db2e8262ffd852290c17c
     // Returned json object can then be parsed using `Response.git_commit`,
     // which returns a GitCommit case class
-    val commit = http(Client(Repos(user, repo).git_commit(commit_sha)) ># Response.git_commit)
+    val commit = http(NoAuthClient(Repos(user, repo).git_commit(commit_sha)) ># Response.git_commit)
     commit.committer.name must_== "softprops"
   }
   
   def commit2: MatchResult[Any] = withHttp { http =>
     // Returned json object can also be parsed field-by-field using an extractor
-    val msg = http(Client(Repos(user, repo).git_commit(commit_sha)) ># { js =>
+    val msg = http(NoAuthClient(Repos(user, repo).git_commit(commit_sha)) ># { js =>
       import GitCommit._
       message(js)
     })
@@ -76,10 +76,10 @@ class GithubSpec extends Specification { def is =
   
   def commit3: MatchResult[Any] = withHttp { http =>
     // this returns a GitRef case class
-    val master = http(Client(Repos(user, repo).git_refs.head("master")) ># Response.git_ref)
+    val master = http(NoAuthClient(Repos(user, repo).git_refs.head("master")) ># Response.git_ref)
     
     // this returns a GitCommit case class
-    val commit = http(Client(Repos(user, repo).git_commit(master)) ># Response.git_commit)
+    val commit = http(NoAuthClient(Repos(user, repo).git_commit(master)) ># Response.git_commit)
     commit.sha must_== master.git_object.sha
   }
       
@@ -88,22 +88,22 @@ class GithubSpec extends Specification { def is =
     // https://api.github.com/repos/dispatch/dispatch/git/trees/563c7dcea4bbb71e49313e92c01337a0a4b7ce72
     // Returned json object can then be parsed using `Reponse.git_trees`,
     // which returns a seqence of GitTree case class
-    val trees = http(Client(Repos(user, repo).git_trees(tree_sha)) ># Response.git_trees)
+    val trees = http(NoAuthClient(Repos(user, repo).git_trees(tree_sha)) ># Response.git_trees)
     trees must have (_.path == ".gitignore")
   }
   
   def trees2: MatchResult[Any] = withHttp { http =>
     // this returns a GitCommit case class
-    val commit = http(Client(Repos(user, repo).git_commit(commit_sha)) ># Response.git_commit)    
+    val commit = http(NoAuthClient(Repos(user, repo).git_commit(commit_sha)) ># Response.git_commit)    
     
     // this returns a seqence of GitTree case class
-    val trees = http(Client(Repos(user, repo).git_trees(commit)) ># Response.git_trees)
+    val trees = http(NoAuthClient(Repos(user, repo).git_trees(commit)) ># Response.git_trees)
     trees must have (_.path == ".gitignore")
   }
   
   def recursive1: MatchResult[Any] = withHttp { http =>
     // this returns a sequence of GitTree case class
-    val trees = http(Client(Repos(user, repo).git_trees(tree_sha).recursive(10)) ># Response.git_trees)
+    val trees = http(NoAuthClient(Repos(user, repo).git_trees(tree_sha).recursive(10)) ># Response.git_trees)
     trees must have (_.path == "twitter/src/main/scala/dispatch/Twitter.scala")
   }
   
@@ -112,7 +112,7 @@ class GithubSpec extends Specification { def is =
     // https://api.github.com/repos/dispatch/dispatch/git/blobs/fb4c8b459f05bcc5296d9c13a3f6757597786f1d
     // Returned json object can then be parsed using `Response.git_blob`,
     // which returns a GitBlob case class
-    val blob = http(Client(Repos(user, repo).git_blob(blob_sha)) ># Response.git_blob)
+    val blob = http(NoAuthClient(Repos(user, repo).git_blob(blob_sha)) ># Response.git_blob)
     
     // `as_utf8` method makes the assumption that the contained content is encoded in UTF-8.
     (blob.as_utf8 startsWith ".classpath") must_== true
