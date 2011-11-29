@@ -18,6 +18,30 @@ case object Client extends AbstractClient {
   def apply(block: Request => Request): Request = block(host)
 }
 
+object OAuth {
+  val authorizations = :/("api.github.com").secure / "authorizations"
+  /** Fetches a new access token given a gh username and password
+   *  and optional list of scopes */
+  def accessToken(user: String, pass: String, scopes: Seq[String] = Nil): Option[String] = {
+    val client = new Http with NoLogging
+    try {
+      client(authorizations.POST.as_!(user, pass) << """{"scopes":[%s]}""".format(
+        scopes.mkString("\"","\",","\"")
+      ) ># { _ \ "token" match {
+        case JString(tok) => Some(tok)
+        case _ => None
+      }})
+    } finally {
+      client.shutdown()
+    }
+  }
+}
+
+case class OAuthClient(token: String) extends AbstractClient {
+  val host = :/(hostname).secure
+  def apply(block: Request => Request): Request = block(host) <<? Map("access_token" -> token)
+}
+
 trait MethodBuilder extends Builder[Request => Request] {
   final def product = setup andThen complete
   def setup = identity[Request] _
