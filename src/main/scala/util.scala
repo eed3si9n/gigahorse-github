@@ -24,6 +24,8 @@ case class BasicAuthClient(user: String, pass: String) extends AbstractClient {
 
 case object Client extends AbstractClient {
   def host = underlying.host
+  override def handle[T](method: Method[T]) = underlying.handle(method)
+  override def apply(block: Request => Request): Request = underlying.apply(block)
   
   lazy val underlying = token map { case (tkn) =>
     OAuthClient(tkn) } getOrElse NoAuthClient
