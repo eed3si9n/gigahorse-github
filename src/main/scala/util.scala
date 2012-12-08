@@ -62,7 +62,7 @@ object OAuth {
 
 case class OAuthClient(token: String) extends AbstractClient {
   val host = :/(hostname).secure
-  override def apply(block: Request => Request): Request = block(host) <<? Map("access_token" -> token)
+  override def apply(block: Request => Request): Request = block(host) <:< Map("Authorization" -> "bearer %s".format(token))
 }
 
 trait MethodBuilder extends Builder[Request => Request] {
