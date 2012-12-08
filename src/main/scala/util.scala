@@ -25,15 +25,10 @@ case class BasicAuthClient(user: String, pass: String) extends AbstractClient {
 case object Client extends AbstractClient {
   def host = underlying.host
   
-  lazy val underlying = credentials map { case (user, pass) =>
-    BasicAuthClient(user, pass) } getOrElse NoAuthClient
+  lazy val underlying = token map { case (tkn) =>
+    OAuthClient(tkn) } getOrElse NoAuthClient
   
-  lazy val credentials: Option[(String, String)] =
-    gitConfig("github.user") flatMap { user =>
-      gitConfig("github.password") map { pass =>
-        (user, pass)
-      }
-    }
+  lazy val token: Option[(String)] = gitConfig("github.token")
   
   // https://github.com/defunkt/gist/blob/master/lib/gist.rb#L237
   def gitConfig(key: String): Option[String] =
