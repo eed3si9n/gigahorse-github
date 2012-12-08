@@ -17,6 +17,31 @@ case class Repos(user: String, name: String) extends ResourceMethod {
   def complete = _ / "repos" / user / name
 }
 
+/** provides parsing support for a github repository response.
+ * @see http://developer.github.com/v3/repos/
+ */
+object Repo extends Parsers {
+  val full_name   = 'full_name ? str
+  val description = 'description ? str
+  val `private`   = 'private ? bool
+  val fork        = 'fork ? bool
+  val html_url    = 'html_url ? str
+  val clone_url   = 'clone_url ? str
+  val git_url     = 'git_url ? str
+  val ssh_url     = 'ssh_url ? str
+  val svn_url     = 'svn_url ? str
+  val mirror_url  = 'mirror_url ? str
+  val homepage    = 'homepage ? str
+  val language    = 'language ? str
+  val forks       = 'forks ? int
+  val forks_count = 'forks_count ? int
+  val watchers    = 'watchers ? int
+  val watchers_count = 'watchers_count ? int
+  val master_branch = 'master_branch ? str
+  val open_issues = 'open_issues ? int
+  val pushed_at   = parseDate("pushed_at")
+}
+
 object Response {
   val git_ref = GitRef.fromJson _
   val git_refs = GitRefs.fromJson _
@@ -40,6 +65,7 @@ case class GitBlobs(repo: Repos, sha: String, mime: Option[String]) extends Reso
   }
 }
 
+/** provides parsing support for a git blob response. */
 object GitBlob extends Parsers {
   def fromJson(json: JValue): GitBlob = GitBlob(json)
   
@@ -97,6 +123,7 @@ case class GitRefs(repo: Repos, branch: Option[String]) extends ResourceMethod {
   } 
 }
 
+/** provides parsing support for a git reference response. */
 object GitRef extends Parsers {
   def fromJson(json: JValue): GitRef = GitRef(json)
   
@@ -156,7 +183,7 @@ object GitCommit extends Parsers {
   
   object GitUser {
     def apply(json: JValue): GitUser = 
-      GitUser(date = parse_date(json).head,
+      GitUser(date = parseDate("date")(json).head,
         name = name(json).head,
         email = email(json).head)
   }
@@ -226,6 +253,7 @@ case class GitTree(sha: String,
   size: Option[BigInt])
 
 private[github] trait Parsers {
+  val id  = 'id ? int
   val sha = 'sha ? str
   val url = 'url ? str
   val ref = 'ref ? str
@@ -237,15 +265,17 @@ private[github] trait Parsers {
   val message = 'message ? str
   val name = 'name ? str
   val email = 'email ? str
-  val date_str = 'date ? str
+  val created_at = parseDate("created_at")
+  val updated_at = parseDate("updated_at")
   val encoding = 'encoding ? str
   val content = 'content ? str
-  val parse_date = { json: JValue =>
-    date_str(json) map { s =>
+  def parseDate(field: String) = (json: JValue) => 
+    for {
+      JField(field, JString(s)) <- json 
+    } yield {
       val nocolon = if (s.length == 25 && s(22) == ':') s.slice(0, 22) + s.slice(23, 25)
                     else s
       val formatter = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
       formatter.parse(nocolon)
     }
-  }
 }

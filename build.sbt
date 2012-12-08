@@ -6,6 +6,8 @@ name := "dispatch-github"
 
 organization := "com.eed3si9n"
 
+scalaVersion := "2.9.1"
+
 version <<= (dispatchVersion) { "dispatch" + _ + "_0.0.1-SNAPSHOT" }
 
 libraryDependencies <++= (dispatchVersion) { (dv) => Seq(
