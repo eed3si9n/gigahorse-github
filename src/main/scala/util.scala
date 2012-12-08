@@ -4,6 +4,7 @@ import dispatch._
 import dispatch.Request._
 import dispatch.liftjson.Js._
 import net.liftweb.json._
+import scala.util.control.Exception.allCatch
 
 /** Client is a function to wrap API operations */
 abstract class AbstractClient extends ((Request => Request) => Request) {
@@ -36,11 +37,13 @@ case object Client extends AbstractClient {
   
   // https://github.com/defunkt/gist/blob/master/lib/gist.rb#L237
   def gitConfig(key: String): Option[String] =
-    Option(System.getenv(key.toUpperCase.replaceAll("""\.""", "_"))) map { Some(_) } getOrElse {
-      val p = new java.lang.ProcessBuilder("git", "config", "--global", key).start()
-      val reader = new java.io.BufferedReader(new java.io.InputStreamReader(p.getInputStream))
-      Option(reader.readLine)
-    }
+    allCatch opt {
+      Option(System.getenv(key.toUpperCase.replaceAll("""\.""", "_"))) map { Some(_) } getOrElse {
+        val p = new java.lang.ProcessBuilder("git", "config", "--global", key).start()
+        val reader = new java.io.BufferedReader(new java.io.InputStreamReader(p.getInputStream))
+        Option(reader.readLine)
+      }
+    } getOrElse {None}
 }
 
 object OAuth {
