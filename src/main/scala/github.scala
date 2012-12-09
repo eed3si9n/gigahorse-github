@@ -1,12 +1,10 @@
 package dispatch.github
 
 import dispatch._
-import dispatch.Request._
-import dispatch.liftjson.Js._
 import net.liftweb.json._
 
 /** represents a github repository from the request-side */
-case class Repos(user: String, name: String) extends ResourceMethod {
+case class Repos(user: String, name: String) extends Method {
   def git_refs = GitRefs(this, None)
   def git_commit(ref: GitRef): GitCommits = GitCommits(this, ref.git_object.sha)
   def git_commit(sha: String): GitCommits = GitCommits(this, sha)
@@ -21,6 +19,36 @@ case class Repos(user: String, name: String) extends ResourceMethod {
  * @see http://developer.github.com/v3/repos/
  */
 object Repo extends Parsers {
+  def fromJson(json: JValue): Repo = Repo(json)
+  
+  def apply(json: JValue): Repo =
+    Repo(id = id(json).head,
+      owner = owner(json).head,
+      name = name(json).head,
+      full_name = full_name(json).head,
+      description = description(json).head,
+      `private` = `private`(json).head,
+      fork = fork(json).head,
+      url = url(json).head,
+      html_url = html_url(json).head,
+      clone_url = clone_url(json).head,
+      git_url = git_url(json).head,
+      ssh_url = ssh_url(json).head,
+      // svn_url = svn_url(json).head,
+      // mirror_url: Option[String],
+      homepage = homepage(json).head,
+      language = language(json),
+      // forks: BigInt,
+      forks_count = forks_count(json).head,
+      // watchers: BigInt,
+      watchers_count = watchers_count(json).head,
+      size = size(json).head,
+      master_branch = master_branch(json).head,
+      open_issues_count = open_issues_count(json).head,
+      pushed_at = pushed_at(json).head,
+      created_at = created_at(json).head,
+      updated_at = updated_at(json).head)
+
   val full_name   = 'full_name ? str
   val description = 'description ? str
   val `private`   = 'private ? bool
@@ -38,30 +66,71 @@ object Repo extends Parsers {
   val watchers    = 'watchers ? int
   val watchers_count = 'watchers_count ? int
   val master_branch = 'master_branch ? str
-  val open_issues = 'open_issues ? int
-  val pushed_at   = parseDate("pushed_at")
+  val open_issues_count = 'open_issues_count ? int
+  val pushed_at   = 'pushed_at ? iso8601datetime
+
+  def owner(json: JValue): Option[Owner] = (for { JField("owner", v) <- json } yield Owner(v)).headOption
+  
+  object Owner extends Parsers {
+    val login       = 'login ? str
+    val avatar_url  = 'avatar_url ? str
+    val gravatar_id = 'gravatar_id ? str
+
+    def apply(json: JValue): Owner =
+      Owner(id = id(json).head,
+        `type` = `type`(json).head,
+        login = login(json).head,
+        avatar_url = avatar_url(json).head,
+        gravatar_id = gravatar_id(json).head,
+        url = url(json).head)
+  }
+
+  case class Owner(id: BigInt,
+    `type`: String,
+    login: String,
+    avatar_url: String,
+    gravatar_id: String,
+    url: String)
 }
 
-object Response {
-  val git_ref = GitRef.fromJson _
-  val git_refs = GitRefs.fromJson _
-  val git_commit = GitCommit.fromJson _
-  val git_trees = GitTrees.fromJson _
-  val git_blob = GitBlob.fromJson _
-}
+/** represents repository response.
+ * @see http://developer.github.com/v3/repos/
+ */
+case class Repo(id: BigInt,
+  owner: Repo.Owner,
+  name: String,
+  full_name: String,
+  description: String,
+  `private`: Boolean,
+  fork: Boolean,
+  url: String,
+  html_url: String,
+  clone_url: String,
+  git_url: String,
+  ssh_url: String,
+  // svn_url: String,
+  // mirror_url: Option[String],
+  homepage: String,
+  language: Option[String],
+  // forks: BigInt,
+  forks_count: BigInt,
+  // watchers: BigInt,
+  watchers_count: BigInt,
+  size: BigInt,
+  master_branch: String,
+  open_issues_count: BigInt,
+  pushed_at: java.util.Calendar,
+  created_at: java.util.Calendar,
+  updated_at: java.util.Calendar)
 
 /** represents git blob request.
  * @see http://developer.github.com/v3/git/blobs/
  */
-case class GitBlobs(repo: Repos, sha: String, mime: Option[String]) extends ResourceMethod {
+case class GitBlobs(repo: Repos, sha: String, override val mime: Option[String]) extends Method {
   def raw = copy(mime = Some("application/vnd.github.raw"))
   
-  val complete = { req: Request =>
-    val request = repo.complete(req) / "git" / "blobs" / sha
-    mime match {
-      case Some(x) => request <:< Map("Accept" -> x) 
-      case _ => request
-    }
+  val complete = { req: Req =>
+    repo.complete(req) / "git" / "blobs" / sha
   }
 }
 
@@ -111,10 +180,10 @@ object GitRefs {
 /** represents git reference request.
  * @see http://developer.github.com/v3/git/refs/ 
  */
-case class GitRefs(repo: Repos, branch: Option[String]) extends ResourceMethod {
+case class GitRefs(repo: Repos, branch: Option[String]) extends Method {
   def head(branch: String): GitRefs = copy(branch = Some(branch))
   
-  val complete = { req: Request =>
+  val complete = { req: Req =>
     val request = repo.complete(req) / "git" / "refs"
     branch match {
       case Some(b) => request / "heads" / b
@@ -138,12 +207,12 @@ object GitRef extends Parsers {
     def apply(json: JValue): GitObject =
       GitObject(sha = sha(json).head,
         url = url(json).head,
-        type_str = type_str(json).head)
+        `type` = `type`(json).head)
   }
   
   case class GitObject(sha: String,
     url: String,
-    type_str: String)
+    `type`: String)
 }
 
 /** represents git reference response.
@@ -156,7 +225,7 @@ case class GitRef(ref: String,
 /** represents git commit request.
  * @see http://developer.github.com/v3/git/commits/
  */
-case class GitCommits(repo: Repos, sha: String) extends ResourceMethod {
+case class GitCommits(repo: Repos, sha: String) extends Method {
   def complete = repo.complete(_) / "git" / "commits" / sha
 }
 
@@ -183,12 +252,12 @@ object GitCommit extends Parsers {
   
   object GitUser {
     def apply(json: JValue): GitUser = 
-      GitUser(date = parseDate("date")(json).head,
+      GitUser(date = date(json).head,
         name = name(json).head,
         email = email(json).head)
   }
   
-  case class GitUser(date: java.util.Date,
+  case class GitUser(date: java.util.Calendar,
     name: String,
     email: String)
 }
@@ -216,15 +285,16 @@ case class GitShaUrl(sha: String,
   url: String)
 
 object GitTrees {
+  import Js._
   val tree = 'tree ? ary
   
-  def fromJson(json: JValue): Seq[GitTree] = tree(json) map {GitTree(_)}
+  def fromJson(json: JValue): Seq[GitTree] = tree(json).getOrElse(Nil) map {GitTree(_)}
 }
 
 /** represents git tree request.
  * @see http://developer.github.com/v3/git/trees/
  */
-case class GitTrees(repo: Repos, sha: String, params: Map[String, String] = Map()) extends ResourceMethod {
+case class GitTrees(repo: Repos, sha: String, params: Map[String, String] = Map()) extends Method {
   private def param(key: String)(value: Any): GitTrees = copy(params = params + (key -> value.toString))
   
   val recursive = param("recursive")_
@@ -238,7 +308,7 @@ object GitTree extends Parsers {
       url = url(json).head,
       path = path(json).head,
       mode = mode(json).head,
-      type_str = type_str(json).head,
+      `type` = `type`(json).head,
       size = size(json).headOption)
 }
 
@@ -249,10 +319,10 @@ case class GitTree(sha: String,
   url: String,
   path: String,
   mode: String,
-  type_str: String,
+  `type`: String,
   size: Option[BigInt])
 
-private[github] trait Parsers {
+trait Parsers extends Js {
   val id  = 'id ? int
   val sha = 'sha ? str
   val url = 'url ? str
@@ -260,22 +330,14 @@ private[github] trait Parsers {
   
   val path = 'path ? str
   val mode = 'mode ? str
-  val type_str = 'type ? str
+  val `type` = 'type ? str
   val size = 'size ? int
   val message = 'message ? str
   val name = 'name ? str
   val email = 'email ? str
-  val created_at = parseDate("created_at")
-  val updated_at = parseDate("updated_at")
+  val date = 'date ? iso8601datetime
+  val created_at = 'created_at ? iso8601datetime
+  val updated_at = 'updated_at ? iso8601datetime
   val encoding = 'encoding ? str
   val content = 'content ? str
-  def parseDate(field: String) = (json: JValue) => 
-    for {
-      JField(field, JString(s)) <- json 
-    } yield {
-      val nocolon = if (s.length == 25 && s(22) == ':') s.slice(0, 22) + s.slice(23, 25)
-                    else s
-      val formatter = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
-      formatter.parse(nocolon)
-    }
 }
