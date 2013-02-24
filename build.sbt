@@ -2,7 +2,7 @@ import DispatchGithubKeys._
 
 dispatchVersion := "0.9.4"
 
-name := "dispatch-github"
+name := "repatch-github"
 
 organization := "com.eed3si9n"
 

@@ -1,6 +1,7 @@
-package dispatch.as.github
+package repatch.as_github
 
 import dispatch._
+import repatch.github
 import net.liftweb.json.{JsonParser, JValue}
 
 object Json extends (Res => JValue) {

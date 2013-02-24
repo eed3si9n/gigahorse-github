@@ -1,4 +1,4 @@
-package dispatch.github
+package repatch.github
 
 import dispatch._
 import net.liftweb.json._
