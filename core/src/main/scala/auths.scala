@@ -1,33 +1,33 @@
-package repatch.github
+package repatch.github.request
 
 import dispatch._
-import net.liftweb.json._
+import org.json4s._
 import scala.util.control.Exception.allCatch
 
-/** Client is a function to wrap API operations */
-abstract class AbstractClient extends ((Req => Req) => Req) {
-  def hostname = "api.github.com"
-  def host: Req
-  def apply(block: Req => Req): Req = block(host)  
+/** AbstractClient is a function to wrap API operations */
+abstract class AbstractClient extends (Method => Req) {
+  def hostName = "api.github.com"
+  def host = :/(hostName).secure
+  def apply(method: Method): Req = method(host)
 }
 
 case object NoAuthClient extends AbstractClient {
-  def host = :/(hostname).secure
 }
 
 case class BasicAuthClient(user: String, pass: String) extends AbstractClient {
-  def host = :/(hostname).secure as_! (user, pass)
+  override def host = :/(hostName).secure as_! (user, pass)
 }
 
-case object Client extends AbstractClient {
-  def host = underlying.host
-  override def apply(block: Req => Req): Req = underlying.apply(block)
+/** OAuthClient using local github config (https://github.com/blog/180-local-github-config).
+ */
+case object LocalConfigClient extends AbstractClient {
+  override def host = underlying.host
+  override def apply(method: Method): Req = underlying.apply(method)
   
-  lazy val underlying = token map { case (tkn) =>
-    OAuthClient(tkn) } getOrElse NoAuthClient
-  
-  lazy val token: Option[(String)] = gitConfig("github.token")
-  
+  lazy val underlying = underlyingOpt getOrElse sys.error("Token was not found in local config!")
+  lazy val token: Option[String] = gitConfig("github.token")
+  lazy val underlyingOpt: Option[OAuthClient] = token map { OAuthClient } 
+
   // https://github.com/defunkt/gist/blob/master/lib/gist.rb#L237
   def gitConfig(key: String): Option[String] =
     allCatch opt {
@@ -36,37 +36,24 @@ case object Client extends AbstractClient {
         val reader = new java.io.BufferedReader(new java.io.InputStreamReader(p.getInputStream))
         Option(reader.readLine)
       }
-    } getOrElse {None}
+    } getOrElse None
+}
+
+case class OAuthClient(token: String) extends AbstractClient {
+  override def apply(method: Method): Req = method(host) <:< Map("Authorization" -> "bearer %s".format(token))
 }
 
 object OAuth {
   def authorizations = :/("api.github.com").secure / "authorizations"
-  /** Fetches a new access token given a gh username and password
+  /* Fetches a new access token given a gh username and password
    *  and optional list of scopes */
-  def accessToken(user: String, pass: String, scopes: Seq[String] = Nil): Option[String] = {
-    val tok = Http(authorizations.POST.as_!(user, pass) << """{"scopes":[%s]}""".format(
+  def accessToken(user: String, pass: String, scopes: Seq[String] = Nil): Future[String] = {
+    import scala.concurrent.ExecutionContext.Implicits.global 
+    Http(authorizations.POST.as_!(user, pass) << """{"scopes":[%s]}""".format(
       scopes.mkString("\"","\",","\"")
-    ) > as.lift.Json) map { _ \ "token" match {
-      case JString(tok) => Some(tok)
-      case _ => None
+    ) > as.json4s.Json) map { _ \ "token" match {
+      case JString(tok) => tok
+      case _ => sys.error("Token was not found!")
     }}
-    tok()
-  }
-}
-
-case class OAuthClient(token: String) extends AbstractClient {
-  def host = :/(hostname).secure
-  override def apply(block: Req => Req): Req = block(host) <:< Map("Authorization" -> "bearer %s".format(token))
-}
-
-trait Method extends (Req => Req) {
-  def mime: Option[String] = Some("application/json")
-  def complete: Req => Req
-  def apply(req: Req): Req = {
-    val r = complete(req)
-    mime match {
-      case Some(x) => r <:< Map("Accept" -> x)
-      case _ => r
-    }
   }
 }

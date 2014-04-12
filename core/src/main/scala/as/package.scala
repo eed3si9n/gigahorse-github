@@ -1,33 +1,14 @@
-package repatch.as_github
+package dispatch.as.repatch.github
 
-import dispatch._
-import repatch.github
-import net.liftweb.json.{JsonParser, JValue}
+package object response {
+  import com.ning.http.client.Response    
+  import repatch.github.{response => res}
+  import dispatch.as.json4s.Json
 
-object Json extends (Res => JValue) {
-  def apply(r: Res) = (dispatch.as.String andThen JsonParser.parse)(r)
-}
-
-object Repo extends (Res => github.Repo) {
-  def apply(r: Res) = (Json andThen github.Repo.fromJson)(r)
-}
-
-object GitRef extends (Res => github.GitRef) {
-  def apply(r: Res) = (Json andThen github.GitRef.fromJson)(r)
-}
-
-object GitRefs extends (Res => Seq[github.GitRef]) {
-  def apply(r: Res) = (Json andThen github.GitRefs.fromJson)(r)
-}
-
-object GitCommit extends (Res => github.GitCommit) {
-  def apply(r: Res) = (Json andThen github.GitCommit.fromJson)(r)
-}
-
-object GitTrees extends (Res => Seq[github.GitTree]) {
-  def apply(r: Res) = (Json andThen github.GitTrees.fromJson)(r)
-}
-
-object GitBlob extends (Res => github.GitBlob) {
-  def apply(r: Res) = (Json andThen github.GitBlob.fromJson)(r)
+  val Repo: Response => res.Repo = Json andThen res.Repo.apply
+  val GitRefs: Response => Seq[res.GitRef] = Json andThen res.GitRefs.apply
+  val GitRef: Response => res.GitRef = Json andThen res.GitRef.apply
+  val GitCommit: Response => res.GitCommit = Json andThen res.GitCommit.apply
+  val GitTrees: Response => Seq[res.GitTree] = Json andThen res.GitTrees.apply
+  val GitBlob: Response => res.GitBlob = Json andThen res.GitBlob.apply
 }
