@@ -30,7 +30,6 @@ $ git config --global --add github.token your_token
 
 now we can hit the GitHub API using the token:
 
-
 ```scala
 scala> import dispatch._, Defaults._, repatch.github.request._
 import dispatch._
@@ -108,6 +107,18 @@ ref: dispatch.Future[repatch.github.response.GitRef] = scala.concurrent.impl.Pro
 
 scala> ref()
 res2: repatch.github.response.GitRef = GitRef(refs/heads/master,https://api.github.com/repos/dispatch/reboot/git/refs/heads/master,...
+```
+
+> You can also request a sub-namespace. For example, to get all the tag references, you can call:
+>
+> `GET /repos/:owner/:repo/git/refs/tags`
+
+```scala
+scala> val tagRefs = http(client(repo("dispatch", "reboot").git_refs.tags) > as.repatch.github.response.GitRefs)
+tagrRefs: dispatch.Future[Seq[repatch.github.response.GitRef]] = scala.concurrent.impl.Promise$DefaultPromise@d7b42df
+
+scala> tagRefs()
+res3: Seq[repatch.github.response.GitRef] = List(GitRef(refs/tags/0.9.0,https://api.github.com/repos/dispatch/reboot/git/refs/tags/0.9.0,GitObject(b2097a582b7763c1c1a44b9ead0123ba10dbb273,
 ```
 
 ## [commits](https://developer.github.com/v3/git/commits/)

@@ -127,14 +127,10 @@ case class GitRef(ref: String,
 
 /** provides parsing support for a git reference response. */
 object GitRef extends Parse with CommonField {
-  def apply(json: JValue): GitRef = {
-    val x = GitObject(git_object(json))
+  def apply(json: JValue): GitRef =
     GitRef(ref = ref(json),
       url = url(json),
-      git_object = x)
-  }
-  
-  val git_object = 'object.![JObject]
+      git_object = GitObject(git_object(json)))
 }
 
 object GitObject extends Parse with CommonField {
@@ -177,14 +173,14 @@ case class GitCommit(sha: String,
 
 object GitUser extends Parse with CommonField {
   def apply(json: JValue): GitUser = 
-    GitUser(date = date(json),
-      name = name(json),
-      email = email(json))
+    GitUser(name = name(json),
+      email = email(json),
+      date = date(json))
 }
 
-case class GitUser(date: java.util.Calendar,
-  name: String,
-  email: String)
+case class GitUser(name: String,
+  email: String,
+  date: java.util.Calendar)
 
 object GitShaUrl extends Parse with CommonField {
   def apply(json: JValue): GitShaUrl =
@@ -273,6 +269,7 @@ trait CommonField { self: Parse =>
   val updated_at = 'updated_at.![Calendar]
   val encoding = 'encoding.![String]
   val content = 'content.![String]
+  val git_object = 'object.![JObject]
 }
 
 trait Parse {
@@ -280,7 +277,8 @@ trait Parse {
     implicitly[ReadJs[A]].readJs.lift(js)
   def parse_![A: ReadJs](js: JValue): A = parse(js).get
   def parseField[A: ReadJs](key: String)(js: JValue): Option[A] = parse[A](js \ key)
-  def parseField_![A: ReadJs](key: String)(js: JValue): A = parseField(key)(js).get
+  def parseField_![A: ReadJs](key: String)(js: JValue): A =
+    parseField(key)(js) getOrElse sys.error(s"Key $key was not found in ${js.toString}")
   implicit class SymOp(sym: Symbol) {
     def ?[A: ReadJs](js: JValue): Option[A] = parseField[A](sym.name)(js)
     def ?[A: ReadJs]: JValue => Option[A] = ?[A](_)

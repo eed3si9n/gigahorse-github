@@ -22,8 +22,11 @@ case class Repos(owner: String, name: String) extends Method {
  * @see http://developer.github.com/v3/git/refs/ 
  */
 case class GitRefs(repo: Repos, ref: Option[String]) extends Method {
+  def heads: GitRefs = copy(ref = Some("heads"))
   def heads(branch: String): GitRefs = copy(ref = Some("heads/" + branch))
-  
+  def tags: GitRefs = copy(ref = Some("tags"))
+  def tags(tag: String): GitRefs = copy(ref = Some("tags/" + tag))
+
   val complete = { req: Req =>
     val request = repo.complete(req) / "git" / "refs"
     ref match {
@@ -57,9 +60,7 @@ case class GitTrees(repo: Repos, sha: String, params: Map[String, String] = Map(
 case class GitBlobs(repo: Repos, sha: String, override val mime: Option[String]) extends Method {
   def raw = copy(mime = Some("application/vnd.github.raw"))
   
-  val complete = { req: Req =>
-    repo.complete(req) / "git" / "blobs" / sha
-  }
+  def complete = repo.complete(_) / "git" / "blobs" / sha
 }
 
 trait Method extends (Req => Req) {

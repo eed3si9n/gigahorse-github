@@ -20,6 +20,9 @@ class GithubSpec extends Specification { def is = args(sequential = true) ^ s2""
   `git_refs.heads(\"master\")` should
     return a json object that can be parsed using `GitRef`                    ${references2}
 
+  `git_refs.tags` should
+    return a json array that can be parsed using `GitRefs`                    ${reftags1}
+
   `git_commit(:sha)` should
     return a json object that can be parsed using `GitCommit`                 ${commit1}
     return a json object that can be parsed manually                          ${commit2}
@@ -40,7 +43,7 @@ class GithubSpec extends Specification { def is = args(sequential = true) ^ s2""
     return a json object that can be parsed using `GitBlob`                   ${blob1}
 
   `git_blob(:sha).raw` should
-    return raw blob bytes"                                                    ${raw1}
+    return raw blob bytes                                                     ${raw1}
                                                                               """
 
 
@@ -94,7 +97,6 @@ class GithubSpec extends Specification { def is = args(sequential = true) ^ s2""
     // Returned json array can then be parsed using `GitRefs`,  
     // which returns a seqence of GitRef case classes
     val refs = http(client(repo(user, name).git_refs) > as.repatch.github.response.GitRefs)
-    
     val master = (refs() find {_.ref == "refs/heads/master"}).head
     master.git_object.`type` must_== "commit"
   }
@@ -105,6 +107,11 @@ class GithubSpec extends Specification { def is = args(sequential = true) ^ s2""
     master.ref must_== "refs/heads/master"
   }
 
+  def reftags1 = {
+    val refs = http(client(repo(user, name).git_refs.tags) > as.repatch.github.response.GitRefs)
+    val zeroEleven = (refs() find {_.ref == "refs/tags/0.11.0"}).head
+    zeroEleven.git_object.`type` must_== "commit"
+  }
   
   def commit1 = {
     // `client(repos(user, name).git_commit(commit_sha))` constructs a request to
@@ -174,7 +181,7 @@ class GithubSpec extends Specification { def is = args(sequential = true) ^ s2""
   
   def raw1 = {
     // `client(repo(user, name).git_blob(blob_sha).raw)` constructs a request to
-    // https://api.github.com/repos/dispatch/repatch/git/blobs/3baebe52555bc73ad1c9a94261c4552fb8d771cd
+    // https://api.github.com/repos/dispatch/reboot/git/blobs/3baebe52555bc73ad1c9a94261c4552fb8d771cd
     // with "application/vnd.github.raw" as http Accept header.
     // This returns raw bytes. You are responsible for figuring out the charset.
     val raw = http(client(repo(user, name).git_blob(blob_sha).raw) > as.String)
