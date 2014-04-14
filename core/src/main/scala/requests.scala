@@ -18,17 +18,6 @@ case class Repos(owner: String, name: String) extends Method {
   def complete = _ / "repos" / owner / name
 }
 
-/** represents git blob request.
- * @see http://developer.github.com/v3/git/blobs/
- */
-case class GitBlobs(repo: Repos, sha: String, override val mime: Option[String]) extends Method {
-  def raw = copy(mime = Some("application/vnd.github.raw"))
-  
-  val complete = { req: Req =>
-    repo.complete(req) / "git" / "blobs" / sha
-  }
-}
-
 /** represents git reference request.
  * @see http://developer.github.com/v3/git/refs/ 
  */
@@ -60,6 +49,17 @@ case class GitTrees(repo: Repos, sha: String, params: Map[String, String] = Map(
   val recursive = param("recursive")_
   
   def complete = repo.complete(_) / "git" / "trees" / sha <<? params
+}
+
+/** represents git blob request.
+ * @see http://developer.github.com/v3/git/blobs/
+ */
+case class GitBlobs(repo: Repos, sha: String, override val mime: Option[String]) extends Method {
+  def raw = copy(mime = Some("application/vnd.github.raw"))
+  
+  val complete = { req: Req =>
+    repo.complete(req) / "git" / "blobs" / sha
+  }
 }
 
 trait Method extends (Req => Req) {
