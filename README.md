@@ -70,7 +70,7 @@ json: org.json4s.JValue = JObject(List((id,JInt(2960515)), (name,JString(reboot)
 
 scala> {
          import repatch.github.response.Repo._
-         import Owner._
+         import repatch.github.response.User._
          login(owner(json))
        }
 res0: String = dispatch
@@ -84,7 +84,7 @@ scala> val x = http(client(repo("dispatch", "reboot")) > as.repatch.github.respo
 x: dispatch.Future[repatch.github.response.Repo] = scala.concurrent.impl.Promise$DefaultPromise@15447f19
 
 scala> x()
-res5: repatch.github.response.Repo = Repo(2960515,Owner(1115066,Organization,dispatch,https://avatars.githubusercontent.com/u/1115066?,c4050b114966f021d1d91d0b5baabd5c,...
+res5: repatch.github.response.Repo = Repo(2960515,User(1115066,Organization,dispatch,https://avatars.githubusercontent.com/u/1115066?,c4050b114966f021d1d91d0b5baabd5c,...
 ```
 
 ## [references](https://developer.github.com/v3/git/refs/)
@@ -215,7 +215,7 @@ src_managed
 git the blob as raw.
 
 ```scala
-scala> http(client(repo("dispatch", "reboot").git_blob(blob_sha).raw) > as.String)
+scala> http(client(repo.raw("dispatch", "reboot").git_blob(blob_sha)) > as.String)
 res13: dispatch.Future[String] = scala.concurrent.impl.Promise$DefaultPromise@522c7ab9
 
 scala> res13()
@@ -230,4 +230,30 @@ src_managed
 .idea
 *.iml
 "
+```
+
+## [issues](https://developer.github.com/v3/issues/)
+
+> List all issues across all the authenticated user’s visible repositories including owned repositories, member repositories, and organization repositories:
+>
+> `GET /issues`
+
+```scala
+scala> val iss = http(client(issues) > as.repatch.github.response.Issues)
+iss: dispatch.Future[Seq[repatch.github.response.Issue]] = scala.concurrent.impl.Promise$DefaultPromise@6624ceab
+
+scala> iss()
+res1: Seq[repatch.github.response.Issue] = 
+List(Issue(https://api.github.com/repos/sbt/sbt/issues/1149,Some(https://github.com/sbt/sbt/issues/1149),Some(1149),Some(open),Some(Documentation for AutoPlugins),....
+```
+
+parameters can be passed in as chained method calls.
+
+```scala
+scala> val iss = http(client(issues.labels(Seq("bug")).direction("asc")) > as.repatch.github.response.Issues)
+iss: dispatch.Future[Seq[repatch.github.response.Issue]] = scala.concurrent.impl.Promise$DefaultPromise@5358503a
+
+scala> iss()
+res0: Seq[repatch.github.response.Issue] = 
+List(Issue(https://api.github.com/repos/eed3si9n/scalaxb/issues/232,Some(https://github.com/eed3si9n/scalaxb/issues/232)
 ```

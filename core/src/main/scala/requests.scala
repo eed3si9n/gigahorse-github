@@ -3,6 +3,8 @@ package repatch.github.request
 import dispatch._
 import org.json4s._
 import repatch.github.{response => res}
+import java.util.Calendar
+import collection.immutable.Map
 
 /** represents a github repository from the request-side
  * @see https://developer.github.com/v3/repos/
@@ -13,8 +15,9 @@ case class Repos(owner: String, name: String) extends Method {
   def git_commit(sha: String): GitCommits = GitCommits(this, sha)
   def git_trees(commit: res.GitCommit): GitTrees = GitTrees(this, commit.tree.sha)
   def git_trees(sha: String): GitTrees = GitTrees(this, sha)
-  def git_blob(sha: String): GitBlobs = GitBlobs(this, sha, None)
-  
+  def git_blob(sha: String): GitBlobs = GitBlobs(this, sha, MediaType.default)
+  def issues: ReposIssues = ReposIssues(this, Map())
+
   def complete = _ / "repos" / owner / name
 }
 
@@ -57,20 +60,53 @@ case class GitTrees(repo: Repos, sha: String, params: Map[String, String] = Map(
 /** represents git blob request.
  * @see http://developer.github.com/v3/git/blobs/
  */
-case class GitBlobs(repo: Repos, sha: String, override val mime: Option[String]) extends Method {
-  def raw = copy(mime = Some("application/vnd.github.raw"))
+case class GitBlobs(repo: Repos, sha: String, mimes: Seq[MediaType]) extends Method {
+  // def raw = copy(mime = Seq(MediaType.v3.rawBlob))
   
   def complete = repo.complete(_) / "git" / "blobs" / sha
 }
 
-trait Method extends (Req => Req) {
-  def mime: Option[String] = Some("application/json")
-  def complete: Req => Req
-  def apply(req: Req): Req = {
-    val r = complete(req)
-    mime match {
-      case Some(x) => r <:< Map("Accept" -> x)
-      case _ => r
-    }
+/** represents issues request.
+ * @https://developer.github.com/v3/issues/
+ */
+case class Issues(params: Map[String, String]) extends Method with Param[Issues]
+    with SortParam[Issues] {
+  def complete = _ / "issues" <<? params
+  def param[A: Show](key: String)(value: A): Issues =
+    copy(params = params + (key -> implicitly[Show[A]].shows(value)))
+  val filter  = 'filter.?[String]
+  val state   = 'state.?[String]
+  val labels  = 'labels.?[Seq[String]]
+}
+
+case class ReposIssues(repo: Repos, params: Map[String, String]) extends Method
+    with Param[ReposIssues] with SortParam[ReposIssues] {
+  def complete = repo.complete(_) / "issues" <<? params
+  def param[A: Show](key: String)(value: A): ReposIssues =
+    copy(params = params + (key -> implicitly[Show[A]].shows(value)))
+  val milestone = 'milestone.?[String]
+  val state     = 'state.?[String]
+  val assignee  = 'assignee.?[String]
+  val creator   = 'creator.?[String]
+  val mentioned = 'mentioned.?[String]
+  val labels    = 'labels.?[Seq[String]]
+}
+
+trait SortParam[R] { self: Param[R] =>
+  val sort    = 'sort.?[String]
+  val direction = 'direction.?[String]
+  val since   = 'since.?[Calendar]
+}
+
+trait Param[R] {
+  val params: Map[String, String]
+  def param[A: Show](key: String)(value: A): R
+  implicit class SymOp(sym: Symbol) {
+    def ?[A: Show]: A => R = param(sym.name)_
   }
+}
+
+trait Method extends (Req => Req) {
+  def complete: Req => Req
+  def apply(req: Req): Req = complete(req)
 }

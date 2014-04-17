@@ -10,7 +10,7 @@ import java.util.{GregorianCalendar, Calendar, Locale}
 object Repo extends Parse with CommonField {
   def apply(json: JValue): Repo =
     Repo(id = id(json),
-      owner = Owner(owner(json)),
+      owner = User(owner(json)),
       name = name(json),
       full_name = full_name(json),
       description = description(json),
@@ -25,12 +25,10 @@ object Repo extends Parse with CommonField {
       // mirror_url: Option[String],
       homepage = homepage(json),
       language_opt = language_opt(json),
-      // forks: BigInt,
       forks_count = forks_count(json),
-      // watchers: BigInt,
       watchers_count = watchers_count(json),
       size = size(json),
-      master_branch = master_branch(json),
+      default_branch = default_branch(json),
       open_issues_count = open_issues_count(json),
       pushed_at = pushed_at(json),
       created_at = created_at(json),
@@ -40,7 +38,6 @@ object Repo extends Parse with CommonField {
   val description = 'description.![String]
   val `private`   = 'private.![Boolean]
   val fork        = 'fork.![Boolean]
-  val html_url    = 'html_url.![String]
   val clone_url   = 'clone_url.![String]
   val git_url     = 'git_url.![String]
   val ssh_url     = 'ssh_url.![String]
@@ -49,11 +46,9 @@ object Repo extends Parse with CommonField {
   val homepage    = 'homepage.![String]
   val language    = 'language.![String]
   val language_opt = 'language.?[String]
-  val forks       = 'forks.![BigInt]
   val forks_count = 'forks_count.![BigInt]
-  val watchers    = 'watchers.![BigInt]
   val watchers_count = 'watchers_count.![BigInt]
-  val master_branch = 'master_branch.![String]
+  val default_branch = 'default_branch.![String]
   val open_issues_count = 'open_issues_count.![BigInt]
   val owner       = 'owner.![JObject]
   val pushed_at   = 'pushed_at.![Calendar]
@@ -63,7 +58,7 @@ object Repo extends Parse with CommonField {
  * @see http://developer.github.com/v3/repos/
  */
 case class Repo(id: BigInt,
-  owner: Owner,
+  owner: User,
   name: String,
   full_name: String,
   description: String,
@@ -83,32 +78,11 @@ case class Repo(id: BigInt,
   // watchers: BigInt,
   watchers_count: BigInt,
   size: BigInt,
-  master_branch: String,
+  default_branch: String,
   open_issues_count: BigInt,
   pushed_at: java.util.Calendar,
   created_at: java.util.Calendar,
   updated_at: java.util.Calendar)
-
-object Owner extends Parse with CommonField {
-  val login       = 'login.![String]
-  val avatar_url  = 'avatar_url.![String]
-  val gravatar_id = 'gravatar_id.![String]
-
-  def apply(json: JValue): Owner =
-    Owner(id = id(json),
-      `type` = `type`(json),
-      login = login(json),
-      avatar_url = avatar_url(json),
-      gravatar_id = gravatar_id(json),
-      url = url(json))
-}
-
-case class Owner(id: BigInt,
-  `type`: String,
-  login: String,
-  avatar_url: String,
-  gravatar_id: String,
-  url: String)
 
 object GitRefs {
   def apply(json: JValue): Seq[GitRef] =
@@ -250,6 +224,150 @@ case class GitBlob(sha: String,
     }
 }
 
+object Issues {
+  def apply(json: JValue): Seq[Issue] =
+    for {
+      JArray(array) <- json
+      v <- array
+    } yield Issue(v)
+}
+
+object Issue extends Parse with CommonField {
+  def apply(json: JValue): Issue =
+    Issue(url = url(json),
+      html_url_opt = html_url_opt(json),
+      number_opt = number_opt(json),
+      state_opt = state_opt(json),
+      title_opt = title_opt(json),
+      body_opt = body_opt(json),
+      user_opt = user_opt(json) map User.apply,
+      labels = for {
+        xs <- labels_opt(json).toSeq
+        x <- xs
+      } yield Label(x),
+      assignee_opt = assignee_opt(json) map User.apply,
+      milestone_opt = milestone_opt(json) map Milestone.apply,
+      comments_opt = comments_opt(json),
+      pull_request_opt = pull_request_opt(json) flatMap PullRequest.opt,
+      closed_at_opt = closed_at_opt(json),
+      created_at_opt = created_at_opt(json),
+      updated_at_opt = updated_at_opt(json)
+    )
+
+  val html_url_opt = 'html_url.?[String]
+  val number_opt = 'number.?[BigInt]
+  val state_opt = 'state.?[String]
+  val title_opt = 'title.?[String]
+  val body_opt = 'body.?[String]
+  val user_opt = 'user.?[JObject]
+  val labels_opt = 'labels.?[List[JValue]]
+  val assignee_opt = 'assignee.?[JObject]
+  val milestone_opt = 'milestone.?[JObject]
+  val comments_opt = 'comments.?[BigInt]
+  val pull_request_opt = 'pull_request.?[JObject]
+  val closed_at_opt = 'closed_at.?[Calendar]
+  val created_at_opt = 'created_at.?[Calendar]
+  val updated_at_opt = 'updated_at.?[Calendar]
+}
+
+case class Issue(url: String,
+  html_url_opt: Option[String],
+  number_opt: Option[BigInt],
+  state_opt: Option[String],
+  title_opt: Option[String],
+  body_opt: Option[String],
+  user_opt: Option[User],
+  labels: Seq[Label],
+  assignee_opt: Option[User],
+  milestone_opt: Option[Milestone],
+  comments_opt: Option[BigInt],
+  pull_request_opt: Option[PullRequest],
+  closed_at_opt: Option[Calendar],
+  created_at_opt: Option[Calendar],
+  updated_at_opt: Option[Calendar])
+
+object Label extends Parse with CommonField {
+  def apply(json: JValue): Label =
+    Label(url = url(json),
+      name = name(json),
+      color = color(json))
+
+  val color = 'color.![String]
+}
+
+case class Label(url: String,
+  name: String,
+  color: String)
+
+object Milestone extends Parse with CommonField {
+  def apply(json: JValue): Milestone =
+    Milestone(url = url(json),
+      number = number(json),
+      state = state(json),
+      title = title(json),
+      description = description(json))
+
+  val number = 'number.![BigInt]
+  val state = 'state.![String]
+  val title = 'title.![String]
+  val description = 'description.![String]
+}
+
+case class Milestone(url: String,
+  number: BigInt,
+  state: String,
+  title: String,
+  description: String)
+
+object PullRequest extends Parse with CommonField {
+  def opt(json: JValue): Option[PullRequest] =
+    (for {
+      JObject(fs) <- json
+      JField("url", JString(_)) <- fs.toList
+    } yield apply(json)).headOption
+
+  def apply(json: JValue): PullRequest =
+    PullRequest(url = url(json),
+      html_url = html_url(json),
+      diff_url = diff_url(json),
+      patch_url = patch_url(json))
+
+  val diff_url = 'diff_url.![String]
+  val patch_url = 'patch_url.![String]
+}
+
+case class PullRequest(url: String,
+  html_url: String,
+  diff_url: String,
+  patch_url: String)
+
+object User extends Parse with CommonField {
+  def apply(json: JValue): User =
+    User(url = url(json),
+      login = login(json),
+      id = id(json),
+      html_url = html_url(json),
+      avatar_url = avatar_url(json),
+      gravatar_id = gravatar_id(json),
+      `type` = `type`(json),
+      site_admin = site_admin(json)
+    )
+
+  val login = 'login.![String]
+  val avatar_url = 'avatar_url.![String]
+  val gravatar_id = 'gravatar_id.![String]
+  val site_admin = 'site_admin.![Boolean]
+}
+
+case class User(url: String,
+  login: String,
+  id: BigInt,
+  html_url: String,
+  avatar_url: String,
+  gravatar_id: String,
+  `type`: String,
+  site_admin: Boolean)
+
 trait CommonField { self: Parse =>
   val id = 'id.![BigInt]
   val sha = 'sha.![String]
@@ -270,6 +388,7 @@ trait CommonField { self: Parse =>
   val encoding = 'encoding.![String]
   val content = 'content.![String]
   val git_object = 'object.![JObject]
+  val html_url = 'html_url.![String]
 }
 
 trait Parse {

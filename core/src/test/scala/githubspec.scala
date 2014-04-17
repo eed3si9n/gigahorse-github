@@ -9,46 +9,55 @@ import org.json4s._
 class GithubSpec extends Specification { def is = args(sequential = true) ^ s2"""
   This is a specification to check the github handler
   
-  `repo(owner, repo)` should
+  `repo(:owner, :repo)` should
     return a json object that can be parsed manually                          ${repos1}
     return a json object that can be parsed with extractors                   ${repos2}
     return a json object that can be parsed using `Repo`"                     ${repos3}
 
-  `git_refs` should
+  `repo(:owner, :repo).git_refs` should
     return a json array that can be parsed using `GitRefs`                    ${references1}
 
-  `git_refs.heads(\"master\")` should
+  `repo(:owner, :repo).git_refs.heads(\"master\")` should
     return a json object that can be parsed using `GitRef`                    ${references2}
 
-  `git_refs.tags` should
+  `repo(:owner, :repo).git_refs.tags` should
     return a json array that can be parsed using `GitRefs`                    ${reftags1}
 
-  `git_commit(:sha)` should
+  `repo(:owner, :repo).git_commit(:sha)` should
     return a json object that can be parsed using `GitCommit`                 ${commit1}
     return a json object that can be parsed manually                          ${commit2}
 
-  `git_commit(git_ref)` should
+  `repo(:owner, :repo).git_commit(git_ref)` should
     return a commit json object for the given `GitRef`                        ${commit3}
 
-  `git_trees(:sha)` should
+  `repo(:owner, :repo).git_trees(:sha)` should
     return a json object that can be parsed using `GitTrees`                  ${trees1}
 
-  `git_trees(:sha).recursive(10)` should
+  `repo(:owner, :repo).git_trees(:sha).recursive(10)` should
     return a json object that contains subdir blobs                           ${recursive1}
 
-  `git_trees(commit)` should
+  `repo(:owner, :repo).git_trees(commit)` should
     return a tree json object for the given `GitCommit`                       ${trees2}
 
-  `git_blob(:sha)` should
+  `repo(:owner, :repo).git_blob(:sha)` should
     return a json object that can be parsed using `GitBlob`                   ${blob1}
 
-  `git_blob(:sha).raw` should
+  `repo(:owner, :repo).git_blob(:sha).raw` should
     return raw blob bytes                                                     ${raw1}
+
+  `issues` should
+    return a json array that can be parsed using `Issues`                     ${issues1}
+
+  `issues.labels(Seq("bug")).direction("asc")` should
+    return a json array that can be parsed using `Issues`                     ${issues2}
+
+  `repo(:owner, :repo).issues` should
+    return a json array that can be parsed using `Issues`                     ${issues3}    
+  
                                                                               """
 
-
   lazy val http = new Http
-  lazy val client = LocalConfigClient
+  lazy val client = LocalConfigClient()
   val user = "dispatch"
   val name = "reboot"
   val tree_sha = "b1193d20d761654b7fc35a48cd64b53aedc7a697"
@@ -78,7 +87,7 @@ class GithubSpec extends Specification { def is = args(sequential = true) ^ s2""
       owner(json)
     }
     {
-      import repatch.github.response.Owner._
+      import repatch.github.response.User._
       login(o()) must_== "dispatch"
     }
   }
@@ -180,12 +189,27 @@ class GithubSpec extends Specification { def is = args(sequential = true) ^ s2""
   }
   
   def raw1 = {
-    // `client(repo(user, name).git_blob(blob_sha).raw)` constructs a request to
+    // `client.raw(repo(user, name).git_blob(blob_sha))` constructs a request to
     // https://api.github.com/repos/dispatch/reboot/git/blobs/3baebe52555bc73ad1c9a94261c4552fb8d771cd
     // with "application/vnd.github.raw" as http Accept header.
     // This returns raw bytes. You are responsible for figuring out the charset.
-    val raw = http(client(repo(user, name).git_blob(blob_sha).raw) > as.String)
+    val raw = http(client.raw(repo(user, name).git_blob(blob_sha)) > as.String)
     
     (raw() startsWith ".classpath") must_== true
+  }
+
+  def issues1 = {
+    val iss = http(client(issues) > as.repatch.github.response.Issues)
+    iss().head.state_opt must_== Some("open")
+  }
+
+  def issues2 = {
+    val iss = http(client(issues.labels(Seq("bug")).direction("asc")) > as.repatch.github.response.Issues)
+    iss().head.state_opt must_== Some("open")
+  }
+
+  def issues3 = {
+    val iss = http(client(repo(user, name).issues) > as.repatch.github.response.Issues)
+    iss().head.state_opt must_== Some("open")
   }
 }

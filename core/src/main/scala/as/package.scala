@@ -11,4 +11,5 @@ package object response {
   val GitCommit: Response => res.GitCommit = Json andThen res.GitCommit.apply
   val GitTrees: Response => Seq[res.GitTree] = Json andThen res.GitTrees.apply
   val GitBlob: Response => res.GitBlob = Json andThen res.GitBlob.apply
+  val Issues: Response => Seq[res.Issue] = Json andThen res.Issues.apply
 }
