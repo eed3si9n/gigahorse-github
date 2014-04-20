@@ -31,18 +31,18 @@ $ git config --global --add github.token your_token
 now we can hit the GitHub API using the token:
 
 ```scala
-scala> import dispatch._, Defaults._, repatch.github.request._
+scala> import dispatch._, Defaults._, repatch.github.{request => gh}
 import dispatch._
 import Defaults._
-import repatch.github.request._
+import repatch.github.{request => gh}
 
 scala> val http = new Http
 http: dispatch.Http = Http(com.ning.http.client.AsyncHttpClient@70e54515)
 
-scala> val client = LocalConfigClient()
+scala> val client = gh.LocalConfigClient()
 client: repatch.github.request.LocalConfigClient = LocalConfigClient(OAuthClient(xxxxxxxx,List(StringMediaType(application/json), GithubMediaType(Some(v3),None,Some(json)))))
 
-scala> http(client(repo("dispatch", "reboot")) > as.json4s.Json)
+scala> http(client(gh.repo("dispatch", "reboot")) > as.json4s.Json)
 res0: dispatch.Future[org.json4s.JValue] = scala.concurrent.impl.Promise$DefaultPromise@136e6221
 
 scala> res0()
@@ -65,7 +65,7 @@ Media type variations are supported on authenticating clients by mixing in `Mime
 
 
 ```scala
-scala> http(client.raw(repo("dispatch", "reboot").git_blob(blob_sha)) > as.String)
+scala> http(client.raw(gh.repo("dispatch", "reboot").git_blob(blob_sha)) > as.String)
 res1: dispatch.Future[String] = scala.concurrent.impl.Promise$DefaultPromise@60c821c4
 ```
 
@@ -74,7 +74,7 @@ res1: dispatch.Future[String] = scala.concurrent.impl.Promise$DefaultPromise@60c
 here's to querying for a repository as Json.
 
 ```scala
-scala> val x = http(client(repo("dispatch", "reboot")) > as.json4s.Json)
+scala> val x = http(client(gh.repo("dispatch", "reboot")) > as.json4s.Json)
 x: dispatch.Future[org.json4s.JValue] = scala.concurrent.impl.Promise$DefaultPromise@2be9d442
 
 scala> val json = x()
@@ -92,7 +92,7 @@ here's the same query using case class response handler.
 
 
 ```scala
-scala> val x = http(client(repo("dispatch", "reboot")) > as.repatch.github.response.Repo)
+scala> val x = http(client(gh.repo("dispatch", "reboot")) > as.repatch.github.response.Repo)
 x: dispatch.Future[repatch.github.response.Repo] = scala.concurrent.impl.Promise$DefaultPromise@15447f19
 
 scala> x()
@@ -104,7 +104,7 @@ res5: repatch.github.response.Repo = Repo(2960515,User(1115066,Organization,disp
 > This will return an array of all the references on the system, including things like notes and stashes if they exist on the server.
 
 ```scala
-scala> val refs = http(client(repo("dispatch", "reboot").git_refs) > as.repatch.github.response.GitRefs)
+scala> val refs = http(client(gh.repo("dispatch", "reboot").git_refs) > as.repatch.github.response.GitRefs)
 refs: dispatch.Future[Seq[repatch.github.response.GitRef]] = scala.concurrent.impl.Promise$DefaultPromise@24a3332a
 
 scala> refs()
@@ -114,7 +114,7 @@ res1: Seq[repatch.github.response.GitRef] = List(GitRef(refs/heads/0.9.x,https:/
 > The ref in the URL must be formatted as `heads/branch`, not just `branch`. 
 
 ```scala
-scala> val ref = http(client(repo("dispatch", "reboot").git_refs.heads("master")) > as.repatch.github.response.GitRef)
+scala> val ref = http(client(gh.repo("dispatch", "reboot").git_refs.heads("master")) > as.repatch.github.response.GitRef)
 ref: dispatch.Future[repatch.github.response.GitRef] = scala.concurrent.impl.Promise$DefaultPromise@7e955067
 
 scala> ref()
@@ -126,7 +126,7 @@ res2: repatch.github.response.GitRef = GitRef(refs/heads/master,https://api.gith
 > `GET /repos/:owner/:repo/git/refs/tags`
 
 ```scala
-scala> val tagRefs = http(client(repo("dispatch", "reboot").git_refs.tags) > as.repatch.github.response.GitRefs)
+scala> val tagRefs = http(client(gh.repo("dispatch", "reboot").git_refs.tags) > as.repatch.github.response.GitRefs)
 tagrRefs: dispatch.Future[Seq[repatch.github.response.GitRef]] = scala.concurrent.impl.Promise$DefaultPromise@d7b42df
 
 scala> tagRefs()
@@ -138,7 +138,7 @@ res3: Seq[repatch.github.response.GitRef] = List(GitRef(refs/tags/0.9.0,https://
 > `GET /repos/:owner/:repo/git/commits/:sha`
 
 ```scala
-scala> val commit = http(client(repo("dispatch", "reboot").git_commit("bcf6d255317088ca1e32c6e6ecd4dce1979ac718")) > as.repatch.github.response.GitCommit)
+scala> val commit = http(client(gh.repo("dispatch", "reboot").git_commit("bcf6d255317088ca1e32c6e6ecd4dce1979ac718")) > as.repatch.github.response.GitCommit)
 commit: dispatch.Future[repatch.github.response.GitCommit] = scala.concurrent.impl.Promise$DefaultPromise@34110e6b
 
 scala> commit()
@@ -149,8 +149,8 @@ git reference can also be passed in.
 
 ```scala
 scala> val commit = for {
-         master <- http(client(repo("dispatch", "reboot").git_refs.heads("master")) > as.repatch.github.response.GitRef)
-         x      <- http(client(repo("dispatch", "reboot").git_commit(master)) > as.repatch.github.response.GitCommit)
+         master <- http(client(gh.repo("dispatch", "reboot").git_refs.heads("master")) > as.repatch.github.response.GitRef)
+         x      <- http(client(gh.repo("dispatch", "reboot").git_commit(master)) > as.repatch.github.response.GitCommit)
        } yield x
 commit: scala.concurrent.Future[repatch.github.response.GitCommit] = scala.concurrent.impl.Promise$DefaultPromise@39439e65
 
@@ -164,7 +164,7 @@ GitCommit(28dbd9265dd9780124c1412f7f530684dab020ae,https://api.github.com/repos/
 > `GET /repos/:owner/:repo/git/trees/:sha`
 
 ```scala
-scala> val trees = http(client(repo("dispatch", "reboot").git_trees("b1193d20d761654b7fc35a48cd64b53aedc7a697")) > as.repatch.github.response.GitTrees)
+scala> val trees = http(client(gh.repo("dispatch", "reboot").git_trees("b1193d20d761654b7fc35a48cd64b53aedc7a697")) > as.repatch.github.response.GitTrees)
 trees: dispatch.Future[Seq[repatch.github.response.GitTree]] = scala.concurrent.impl.Promise$DefaultPromise@73259adf
 
 scala> trees()
@@ -174,7 +174,7 @@ res8: Seq[repatch.github.response.GitTree] = List(GitTree(3baebe52555bc73ad1c9a9
 > Get a tree recursively
 
 ```scala
-scala> val trees = http(client(repo("dispatch", "reboot").git_trees("b1193d20d761654b7fc35a48cd64b53aedc7a697").recursive(10)) > as.repatch.github.response.GitTrees)
+scala> val trees = http(client(gh.repo("dispatch", "reboot").git_trees("b1193d20d761654b7fc35a48cd64b53aedc7a697").recursive(10)) > as.repatch.github.response.GitTrees)
 trees: dispatch.Future[Seq[repatch.github.response.GitTree]] = scala.concurrent.impl.Promise$DefaultPromise@b6c8874
 
 scala> trees()
@@ -185,9 +185,9 @@ here's how to get a tree from a git commit.
 
 ```scala
 scala> val trees = for {
-         master <- http(client(repo("dispatch", "reboot").git_refs.heads("master")) > as.repatch.github.response.GitRef)
-         commit <- http(client(repo("dispatch", "reboot").git_commit(master)) > as.repatch.github.response.GitCommit)
-         x      <- http(client(repo("dispatch", "reboot").git_trees(commit)) > as.repatch.github.response.GitTrees) 
+         master <- http(client(gh.repo("dispatch", "reboot").git_refs.heads("master")) > as.repatch.github.response.GitRef)
+         commit <- http(client(gh.repo("dispatch", "reboot").git_commit(master)) > as.repatch.github.response.GitCommit)
+         x      <- http(client(gh.repo("dispatch", "reboot").git_trees(commit)) > as.repatch.github.response.GitTrees) 
        } yield x
 trees: scala.concurrent.Future[Seq[repatch.github.response.GitTree]] = scala.concurrent.impl.Promise$DefaultPromise@3d333b3e
 
@@ -203,7 +203,7 @@ res10: Seq[repatch.github.response.GitTree] = List(GitTree(3baebe52555bc73ad1c9a
 scala> val blob_sha = "3baebe52555bc73ad1c9a94261c4552fb8d771cd"
 blob_sha: String = 3baebe52555bc73ad1c9a94261c4552fb8d771cd
 
-scala> val blob = http(client(repo("dispatch", "reboot").git_blob(blob_sha)) > as.repatch.github.response.GitBlob)
+scala> val blob = http(client(gh.repo("dispatch", "reboot").git_blob(blob_sha)) > as.repatch.github.response.GitBlob)
 blob: dispatch.Future[repatch.github.response.GitBlob] = scala.concurrent.impl.Promise$DefaultPromise@3943a8f9
 
 scala> blob()
@@ -230,7 +230,7 @@ src_managed
 git the blob as raw.
 
 ```scala
-scala> http(client.raw(repo("dispatch", "reboot").git_blob(blob_sha)) > as.String)
+scala> http(client.raw(gh.repo("dispatch", "reboot").git_blob(blob_sha)) > as.String)
 res1: dispatch.Future[String] = scala.concurrent.impl.Promise$DefaultPromise@60c821c4
 
 scala> res1()
@@ -254,7 +254,7 @@ src_managed
 > `GET /issues`
 
 ```scala
-scala> val iss = http(client(issues) > as.repatch.github.response.Issues)
+scala> val iss = http(client(gh.issues) > as.repatch.github.response.Issues)
 iss: dispatch.Future[Seq[repatch.github.response.Issue]] = scala.concurrent.impl.Promise$DefaultPromise@6624ceab
 
 scala> iss()
@@ -265,7 +265,7 @@ List(Issue(https://api.github.com/repos/sbt/sbt/issues/1149,Some(https://github.
 parameters can be passed in as chained method calls.
 
 ```scala
-scala> val iss = http(client(issues.labels(Seq("bug")).direction("asc")) > as.repatch.github.response.Issues)
+scala> val iss = http(client(gh.issues.labels(Seq("bug")).direction("asc")) > as.repatch.github.response.Issues)
 iss: dispatch.Future[Seq[repatch.github.response.Issue]] = scala.concurrent.impl.Promise$DefaultPromise@5358503a
 
 scala> iss()

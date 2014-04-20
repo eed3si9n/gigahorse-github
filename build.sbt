@@ -23,7 +23,7 @@ lazy val core = (project in file("core")).
     libraryDependencies += "net.databinder.dispatch" %% "dispatch-json4s-native" % dispatchVersion,
     libraryDependencies += "org.specs2" %% "specs2" % specsVersion % "test",
     initialCommands in console := """import dispatch._, Defaults._
-                                    |import repatch.github.request._
+                                    |import repatch.github.{request => gh}
                                     |val client = LocalConfigClient()
                                     |val http = new Http""".stripMargin
   )
