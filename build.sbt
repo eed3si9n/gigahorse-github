@@ -24,6 +24,6 @@ lazy val core = (project in file("core")).
     libraryDependencies += "org.specs2" %% "specs2" % specsVersion % "test",
     initialCommands in console := """import dispatch._, Defaults._
                                     |import repatch.github.{request => gh}
-                                    |val client = LocalConfigClient()
+                                    |val client = gh.LocalConfigClient()
                                     |val http = new Http""".stripMargin
   )

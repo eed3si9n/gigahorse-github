@@ -3,6 +3,8 @@ package repatch.github.response
 import dispatch._
 import org.json4s._
 import java.util.{GregorianCalendar, Calendar, Locale}
+import com.ning.http.client.Response
+import collection.immutable.Map
 
 /** provides parsing support for a github repository response.
  * @see http://developer.github.com/v3/repos/
@@ -84,14 +86,6 @@ case class Repo(id: BigInt,
   created_at: java.util.Calendar,
   updated_at: java.util.Calendar)
 
-object GitRefs {
-  def apply(json: JValue): Seq[GitRef] =
-    for {
-      JArray(array) <- json
-      v <- array
-    } yield GitRef(v)
-}
-
 /** represents git reference response.
  * @see http://developer.github.com/v3/git/refs/
  */
@@ -165,11 +159,18 @@ object GitShaUrl extends Parse with CommonField {
 case class GitShaUrl(sha: String,
   url: String)
 
-object GitTrees extends Parse {
+object GitTrees extends Parse with CommonField {
   val tree = 'tree.![List[JValue]]
   
-  def apply(json: JValue): Seq[GitTree] = tree(json) map GitTree.apply
+  def apply(json: JValue): GitTrees =
+    GitTrees(sha = sha(json),
+      url = url(json),
+      tree = tree(json) map GitTree.apply)
 }
+
+case class GitTrees(sha: String,
+  url: String,
+  tree: Seq[GitTree])
 
 object GitTree extends Parse with CommonField {  
   def apply(json: JValue): GitTree =
@@ -222,14 +223,6 @@ case class GitBlob(sha: String,
       case "utf-8"  => content.getBytes
       case "base64" => (new sun.misc.BASE64Decoder()).decodeBuffer(content)
     }
-}
-
-object Issues {
-  def apply(json: JValue): Seq[Issue] =
-    for {
-      JArray(array) <- json
-      v <- array
-    } yield Issue(v)
 }
 
 object Issue extends Parse with CommonField {
@@ -350,13 +343,17 @@ object User extends Parse with CommonField {
       avatar_url = avatar_url(json),
       gravatar_id = gravatar_id(json),
       `type` = `type`(json),
-      site_admin = site_admin(json)
+      site_admin = site_admin(json),
+      name_opt = name_opt(json),
+      email_opt = email_opt(json)
     )
 
   val login = 'login.![String]
   val avatar_url = 'avatar_url.![String]
   val gravatar_id = 'gravatar_id.![String]
   val site_admin = 'site_admin.![Boolean]
+  val name_opt = 'name.?[String]
+  val email_opt = 'email.?[String]
 }
 
 case class User(url: String,
@@ -366,7 +363,45 @@ case class User(url: String,
   avatar_url: String,
   gravatar_id: String,
   `type`: String,
-  site_admin: Boolean)
+  site_admin: Boolean,
+  name_opt: Option[String],
+  email_opt: Option[String])
+
+/** represents pagination.
+ */
+case class Paged[A](data: Seq[A], links: Map[String, String]) {
+  def next_page: Option[String] = links.get("next")
+  def last_page: Option[String] = links.get("last")
+  def first_page: Option[String] = links.get("first")
+  def prev_page: Option[String] = links.get("prev")
+}
+
+object Paged {
+  implicit def pageToSeq[A](paged: Paged[A]): Seq[A] = paged.data
+
+  def parseArray[A](f: JValue => A): Response => Paged[A] = { (res: Response) =>
+    val json = as.json4s.Json(res)
+    val links = linkHeader(res)
+    Paged(
+      for {
+        JArray(array) <- json
+        v <- array
+      } yield f(v),
+      links)
+  }
+
+  def linkHeader(res: Response): Map[String, String] =
+    Map((Option(res.getHeader("Link")) match {
+      case Some(s) =>
+        s.split(",").toList flatMap { x => x.split(";").toList match {
+          case v :: k :: Nil =>
+            Some(k.trim.replaceAllLiterally("rel=", "").replaceAllLiterally("\"", "") ->
+              v.trim.replaceAllLiterally(">", "").replaceAllLiterally("<", ""))
+          case _ => None
+        }}
+      case None => Nil
+    }): _*)
+}
 
 trait CommonField { self: Parse =>
   val id = 'id.![BigInt]

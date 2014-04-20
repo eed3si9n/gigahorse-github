@@ -61,12 +61,34 @@ if you just want a case classes of commonly used fields, you say `as.repatch.git
 
 > Custom media types are used in the API to let consumers choose the format of the data they wish to receive. This is done by adding one or more of the following types to the `Accept` header when you make a request.
 
-Media type variations are supported on authenticating clients by mixing in `Mime[R]`. Here's an example of `raw` format:
-
+media type variations are supported on authenticating clients by mixing in `Mime[R]`. Here's an example of `raw` format:
 
 ```scala
 scala> http(client.raw(gh.repo("dispatch", "reboot").git_blob(blob_sha)) > as.String)
 res1: dispatch.Future[String] = scala.concurrent.impl.Promise$DefaultPromise@60c821c4
+```
+
+### pagination
+
+> Requests that return multiple items will be paginated to 30 items by default. 
+>
+> The pagination info is included in the Link header. It is important to follow these Link header values instead of constructing your own URLs.
+
+paged responses can be parsed into `Paged[A]`, which wraps `Seq[A]` and url links included in HTTP header.
+
+```scala
+scala> val iss = http(client(gh.repo("dispatch", "reboot").issues.page(1).per_page(1)) > as.repatch.github.response.Issues)
+iss: dispatch.Future[repatch.github.response.Paged[repatch.github.response.Issue]] = scala.concurrent.impl.Promise$DefaultPromise@442e7590
+
+scala> iss().next_page
+res1: Option[String] = Some(https://api.github.com/repositories/2960515/issues?page=2&per_page=1)
+
+scala> val iss2 = http(client(gh.url(iss().next_page.get)) > as.repatch.github.response.Issues)
+iss2: dispatch.Future[repatch.github.response.Paged[repatch.github.response.Issue]] = scala.concurrent.impl.Promise$DefaultPromise@7c0d3bdb
+
+scala> iss2()
+res2: repatch.github.response.Paged[repatch.github.response.Issue] = 
+Paged(List(Issue(https://api.github.com/repos/dispatch/reboot/issues/75,Some(https://github.com/dispatch/reboot/issues/75),...
 ```
 
 ## [repositories](https://developer.github.com/v3/repos/)
@@ -105,17 +127,17 @@ res5: repatch.github.response.Repo = Repo(2960515,User(1115066,Organization,disp
 
 ```scala
 scala> val refs = http(client(gh.repo("dispatch", "reboot").git_refs) > as.repatch.github.response.GitRefs)
-refs: dispatch.Future[Seq[repatch.github.response.GitRef]] = scala.concurrent.impl.Promise$DefaultPromise@24a3332a
+refs: dispatch.Future[repatch.github.response.Paged[repatch.github.response.GitRef]] = scala.concurrent.impl.Promise$DefaultPromise@6ea6ba8d
 
 scala> refs()
-res1: Seq[repatch.github.response.GitRef] = List(GitRef(refs/heads/0.9.x,https://api.github.com/repos/dispatch/reboot/git/refs/heads/0.9.x,GitObject(e547dd41a38e5d3c40576d00c929b25fc6d333a6,....
+res3: repatch.github.response.Paged[repatch.github.response.GitRef] = Paged(List(GitRef(refs/heads/0.9.x,https://api.github.com/repos/dispatch/reboot/git/refs/heads/0.9.x,GitObject(e547dd41a38e5d3c40576d00c929b25fc6d333a6...
 ```
 
 > The ref in the URL must be formatted as `heads/branch`, not just `branch`. 
 
 ```scala
 scala> val ref = http(client(gh.repo("dispatch", "reboot").git_refs.heads("master")) > as.repatch.github.response.GitRef)
-ref: dispatch.Future[repatch.github.response.GitRef] = scala.concurrent.impl.Promise$DefaultPromise@7e955067
+ref: dispatch.Future[repatch.github.response.GitRef] = scala.concurrent.impl.Promise$DefaultPromise@7e955067...
 
 scala> ref()
 res2: repatch.github.response.GitRef = GitRef(refs/heads/master,https://api.github.com/repos/dispatch/reboot/git/refs/heads/master,...
@@ -127,10 +149,10 @@ res2: repatch.github.response.GitRef = GitRef(refs/heads/master,https://api.gith
 
 ```scala
 scala> val tagRefs = http(client(gh.repo("dispatch", "reboot").git_refs.tags) > as.repatch.github.response.GitRefs)
-tagrRefs: dispatch.Future[Seq[repatch.github.response.GitRef]] = scala.concurrent.impl.Promise$DefaultPromise@d7b42df
+tagRefs: dispatch.Future[repatch.github.response.Paged[repatch.github.response.GitRef]] = scala.concurrent.impl.Promise$DefaultPromise@736577b2
 
 scala> tagRefs()
-res3: Seq[repatch.github.response.GitRef] = List(GitRef(refs/tags/0.9.0,https://api.github.com/repos/dispatch/reboot/git/refs/tags/0.9.0,GitObject(b2097a582b7763c1c1a44b9ead0123ba10dbb273,
+res4: repatch.github.response.Paged[repatch.github.response.GitRef] = Paged(List(GitRef(refs/tags/0.9.0,https://api.github.com/repos/dispatch/reboot/git/refs/tags/0.9.0,GitObject(b2097a582b7763c1c1a44b9ead0123ba10dbb273,...
 ```
 
 ## [commits](https://developer.github.com/v3/git/commits/)
@@ -142,7 +164,7 @@ scala> val commit = http(client(gh.repo("dispatch", "reboot").git_commit("bcf6d2
 commit: dispatch.Future[repatch.github.response.GitCommit] = scala.concurrent.impl.Promise$DefaultPromise@34110e6b
 
 scala> commit()
-res0: repatch.github.response.GitCommit = GitCommit(bcf6d255317088ca1e32c6e6ecd4dce1979ac718,https://api.github.com/repos/dispatch/reboot/git/commits/bcf6d255317088ca1e32c6e6ecd4dce1979ac718
+res0: repatch.github.response.GitCommit = GitCommit(bcf6d255317088ca1e32c6e6ecd4dce1979ac718,https://api.github.com/repos/dispatch/reboot/git/commits/bcf6d255317088ca1e32c6e6ecd4dce1979ac718...
 ```
 
 git reference can also be passed in.
@@ -156,7 +178,7 @@ commit: scala.concurrent.Future[repatch.github.response.GitCommit] = scala.concu
 
 scala> commit()
 res1: repatch.github.response.GitCommit = 
-GitCommit(28dbd9265dd9780124c1412f7f530684dab020ae,https://api.github.com/repos/dispatch/reboot/git/commits/28dbd9265dd9780124c1412f7f530684dab020ae,
+GitCommit(28dbd9265dd9780124c1412f7f530684dab020ae,https://api.github.com/repos/dispatch/reboot/git/commits/28dbd9265dd9780124c1412f7f530684dab020ae,...
 ```
 
 ## [trees](https://developer.github.com/v3/git/trees/)
@@ -165,20 +187,20 @@ GitCommit(28dbd9265dd9780124c1412f7f530684dab020ae,https://api.github.com/repos/
 
 ```scala
 scala> val trees = http(client(gh.repo("dispatch", "reboot").git_trees("b1193d20d761654b7fc35a48cd64b53aedc7a697")) > as.repatch.github.response.GitTrees)
-trees: dispatch.Future[Seq[repatch.github.response.GitTree]] = scala.concurrent.impl.Promise$DefaultPromise@73259adf
+trees: dispatch.Future[repatch.github.response.GitTrees] = scala.concurrent.impl.Promise$DefaultPromise@2e39619b
 
 scala> trees()
-res8: Seq[repatch.github.response.GitTree] = List(GitTree(3baebe52555bc73ad1c9a94261c4552fb8d771cd,https://api.github.com/repos/dispatch/reboot/git/blobs/3baebe52555bc73ad1c9a94261c4552fb8d771cd,.gitignore,100644,blob,Some(93)), ...
+res5: repatch.github.response.GitTrees = GitTrees(b1193d20d761654b7fc35a48cd64b53aedc7a697,https://api.github.com/repos/dispatch/reboot/git/trees/b1193d20d761654b7fc35a48cd64b53aedc7a697,List(GitTree(3baebe52555bc73ad1c9a94261c4552fb8d771cd,https://api.github.com/repos/dispatch/reboot/git/blobs/3baebe52555bc73ad1c9a94261c4552fb8d771cd,.gitignore,100644,blob,Some(93)), ...
 ```
 
 > Get a tree recursively
 
 ```scala
 scala> val trees = http(client(gh.repo("dispatch", "reboot").git_trees("b1193d20d761654b7fc35a48cd64b53aedc7a697").recursive(10)) > as.repatch.github.response.GitTrees)
-trees: dispatch.Future[Seq[repatch.github.response.GitTree]] = scala.concurrent.impl.Promise$DefaultPromise@b6c8874
+trees: dispatch.Future[repatch.github.response.GitTrees] = scala.concurrent.impl.Promise$DefaultPromise@1a3fb85d
 
 scala> trees()
-res9: Seq[repatch.github.response.GitTree] = List(GitTree(3baebe52555bc73ad1c9a94261c4552fb8d771cd,https://api.github.com/repos/dispatch/reboot/git/blobs/3baebe52555bc73ad1c9a94261c4552fb8d771cd,.gitignore,100644,blob,Some(93)), ...
+res7: repatch.github.response.GitTrees = GitTrees(b1193d20d761654b7fc35a48cd64b53aedc7a697,https://api.github.com/repos/dispatch/reboot/git/trees/b1193d20d761654b7fc35a48cd64b53aedc7a697,List(GitTree(3baebe52555bc73ad1c9a94261c4552fb8d771cd,https://api.github.com/repos/dispatch/reboot/git/blobs/3baebe52555bc73ad1c9a94261c4552fb8d771cd,.gitignore,100644,blob,Some(93)),...
 ```
 
 here's how to get a tree from a git commit.
@@ -189,10 +211,10 @@ scala> val trees = for {
          commit <- http(client(gh.repo("dispatch", "reboot").git_commit(master)) > as.repatch.github.response.GitCommit)
          x      <- http(client(gh.repo("dispatch", "reboot").git_trees(commit)) > as.repatch.github.response.GitTrees) 
        } yield x
-trees: scala.concurrent.Future[Seq[repatch.github.response.GitTree]] = scala.concurrent.impl.Promise$DefaultPromise@3d333b3e
+trees: scala.concurrent.Future[repatch.github.response.GitTrees] = scala.concurrent.impl.Promise$DefaultPromise@2cbb346d
 
 scala> trees()
-res10: Seq[repatch.github.response.GitTree] = List(GitTree(3baebe52555bc73ad1c9a94261c4552fb8d771cd,https://api.github.com/repos/dispatch/reboot/git/blobs/3baebe52555bc73ad1c9a94261c4552fb8d771cd,.gitignore,100644,blob,Some(93)), ...
+res8: repatch.github.response.GitTrees = GitTrees(4972c45a48bbb73f0f110e58eae6d13ff6349566,https://api.github.com/repos/dispatch/reboot/git/trees/4972c45a48bbb73f0f110e58eae6d13ff6349566,List(GitTree(3baebe52555bc73ad1c9a94261c4552fb8d771cd,https://api.github.com/repos/dispatch/reboot/git/blobs/3baebe52555bc73ad1c9a94261c4552fb8d771cd,.gitignore,100644,blob,Some(93)), ...
 ```
 
 ## [blobs](https://developer.github.com/v3/git/blobs/)
@@ -255,20 +277,20 @@ src_managed
 
 ```scala
 scala> val iss = http(client(gh.issues) > as.repatch.github.response.Issues)
-iss: dispatch.Future[Seq[repatch.github.response.Issue]] = scala.concurrent.impl.Promise$DefaultPromise@6624ceab
+iss: dispatch.Future[repatch.github.response.Paged[repatch.github.response.Issue]] = scala.concurrent.impl.Promise$DefaultPromise@45b81f84
 
 scala> iss()
-res1: Seq[repatch.github.response.Issue] = 
-List(Issue(https://api.github.com/repos/sbt/sbt/issues/1149,Some(https://github.com/sbt/sbt/issues/1149),Some(1149),Some(open),Some(Documentation for AutoPlugins),....
+res9: repatch.github.response.Paged[repatch.github.response.Issue] = 
+Paged(List(Issue(https://api.github.com/repos/sbt/sbt/issues/1149,Some(https://github.com/sbt/sbt/issues/1149),Some(1149),Some(open),Some(Documentation for AutoPlugins),S...
 ```
 
 parameters can be passed in as chained method calls.
 
 ```scala
 scala> val iss = http(client(gh.issues.labels(Seq("bug")).direction("asc")) > as.repatch.github.response.Issues)
-iss: dispatch.Future[Seq[repatch.github.response.Issue]] = scala.concurrent.impl.Promise$DefaultPromise@5358503a
+iss: dispatch.Future[repatch.github.response.Paged[repatch.github.response.Issue]] = scala.concurrent.impl.Promise$DefaultPromise@d30bfb7
 
 scala> iss()
-res0: Seq[repatch.github.response.Issue] = 
-List(Issue(https://api.github.com/repos/eed3si9n/scalaxb/issues/232,Some(https://github.com/eed3si9n/scalaxb/issues/232)
+res11: repatch.github.response.Paged[repatch.github.response.Issue] = 
+Paged(List(Issue(https://api.github.com/repos/eed3si9n/scalaxb/issues/232,Some(https://github.com/eed3si9n/scalaxb/issues/232),...
 ```

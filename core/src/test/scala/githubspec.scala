@@ -53,7 +53,15 @@ class GithubSpec extends Specification { def is = args(sequential = true) ^ s2""
 
   `gh.repo(:owner, :repo).issues` should
     return a json array that can be parsed using `Issues`                     ${issues3}    
-  
+
+  `gh.repo(:owner, :repo).issues.page(1).per_page(1)` should
+    return a json array with Link HTTP header for the next page`              ${pagination1}    
+
+  `gh.user` should
+    return a json object that can be parsed using `User`                      ${user1}
+
+  `gh.user(:user)` should
+    return a json object that can be parsed using `User`                      ${user2}
                                                                               """
 
   lazy val http = new Http
@@ -157,14 +165,14 @@ class GithubSpec extends Specification { def is = args(sequential = true) ^ s2""
     // which returns a seqence of GitTree case class
     val trees = http(client(gh.repo(user, name).git_trees(tree_sha)) > as.repatch.github.response.GitTrees)
     import repatch.github.response.GitTree
-    trees() must contain { tree: GitTree => tree.path must be_==(".gitignore") }
+    trees().tree must contain { tree: GitTree => tree.path must be_==(".gitignore") }
   }
 
   def recursive1 = {
     // this returns a sequence of GitTree case class
     val trees = http(client(gh.repo(user, name).git_trees(tree_sha).recursive(10)) > as.repatch.github.response.GitTrees)
     import repatch.github.response.GitTree
-    trees() must contain { tree: GitTree => tree.path must be_==("core/src/main/scala/retry/retries.scala") }
+    trees().tree must contain { tree: GitTree => tree.path must be_==("core/src/main/scala/retry/retries.scala") }
   }
   
   def trees2 = {
@@ -174,7 +182,7 @@ class GithubSpec extends Specification { def is = args(sequential = true) ^ s2""
     // this returns a seqence of GitTree case class
     val trees = http(client(gh.repo(user, name).git_trees(commit())) > as.repatch.github.response.GitTrees)
     import repatch.github.response.GitTree
-    trees() must contain { tree: GitTree => tree.path must be_==(".gitignore") }
+    trees().tree must contain { tree: GitTree => tree.path must be_==(".gitignore") }
   }
     
   def blob1 = {
@@ -211,5 +219,26 @@ class GithubSpec extends Specification { def is = args(sequential = true) ^ s2""
   def issues3 = {
     val iss = http(client(gh.repo(user, name).issues) > as.repatch.github.response.Issues)
     iss().head.state_opt must_== Some("open")
+  }
+
+  def pagination1 = {
+    val iss = http(client(gh.repo(user, name).issues.page(1).per_page(1)) > as.repatch.github.response.Issues)
+    iss().next_page match {
+      case Some(next) =>
+        val iss2 = http(client(gh.url(next)) > as.repatch.github.response.Issues)
+        iss2().head.state_opt must_== Some("open")
+      case _ => sys.error("next page was not found")
+    }
+
+  }
+
+  def user1 = {
+    val usr = http(client(gh.user) > as.repatch.github.response.User)
+    usr().login must_!= "foo" 
+  }
+
+  def user2 = {
+    val usr = http(client(gh.user("eed3si9n")) > as.repatch.github.response.User)
+    usr().login must_== "eed3si9n"
   }
 }
