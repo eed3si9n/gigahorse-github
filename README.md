@@ -39,8 +39,8 @@ import repatch.github.request._
 scala> val http = new Http
 http: dispatch.Http = Http(com.ning.http.client.AsyncHttpClient@70e54515)
 
-scala> val client = LocalConfigClient
-client: repatch.github.request.LocalConfigClient.type = <function1>
+scala> val client = LocalConfigClient()
+client: repatch.github.request.LocalConfigClient = LocalConfigClient(OAuthClient(xxxxxxxx,List(StringMediaType(application/json), GithubMediaType(Some(v3),None,Some(json)))))
 
 scala> http(client(repo("dispatch", "reboot")) > as.json4s.Json)
 res0: dispatch.Future[org.json4s.JValue] = scala.concurrent.impl.Promise$DefaultPromise@136e6221
@@ -56,6 +56,18 @@ following the ethos of Dispatch Reboot, repatch-github splits request hander and
 you can choose what format you would like Dispatch to return the response in. if you want raw string, you specify `as.String`. if you want json, you say `as.json4s.Json`. to assist the json parsing, repatch-github provides known field names as extractors under the companion object of the response classes.
 
 if you just want a case classes of commonly used fields, you say `as.repatch.github.response.Repo` etc, and it would give you `Repo` case class.
+
+### media type
+
+> Custom media types are used in the API to let consumers choose the format of the data they wish to receive. This is done by adding one or more of the following types to the `Accept` header when you make a request.
+
+Media type variations are supported on authenticating clients by mixing in `Mime[R]`. Here's an example of `raw` format:
+
+
+```scala
+scala> http(client.raw(repo("dispatch", "reboot").git_blob(blob_sha)) > as.String)
+res1: dispatch.Future[String] = scala.concurrent.impl.Promise$DefaultPromise@60c821c4
+```
 
 ## [repositories](https://developer.github.com/v3/repos/)
 
@@ -188,6 +200,9 @@ res10: Seq[repatch.github.response.GitTree] = List(GitTree(3baebe52555bc73ad1c9a
 > `GET /repos/:owner/:repo/git/blobs/:sha`
 
 ```scala
+scala> val blob_sha = "3baebe52555bc73ad1c9a94261c4552fb8d771cd"
+blob_sha: String = 3baebe52555bc73ad1c9a94261c4552fb8d771cd
+
 scala> val blob = http(client(repo("dispatch", "reboot").git_blob(blob_sha)) > as.repatch.github.response.GitBlob)
 blob: dispatch.Future[repatch.github.response.GitBlob] = scala.concurrent.impl.Promise$DefaultPromise@3943a8f9
 
@@ -215,11 +230,11 @@ src_managed
 git the blob as raw.
 
 ```scala
-scala> http(client(repo.raw("dispatch", "reboot").git_blob(blob_sha)) > as.String)
-res13: dispatch.Future[String] = scala.concurrent.impl.Promise$DefaultPromise@522c7ab9
+scala> http(client.raw(repo("dispatch", "reboot").git_blob(blob_sha)) > as.String)
+res1: dispatch.Future[String] = scala.concurrent.impl.Promise$DefaultPromise@60c821c4
 
-scala> res13()
-res14: String = 
+scala> res1()
+res2: String = 
 ".classpath
 .project
 .settings
