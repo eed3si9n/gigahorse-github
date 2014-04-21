@@ -6,4 +6,5 @@ package object request {
   def user: User = User()
   def user(name: String): Users = Users(name)
   def url(u: String): UrlMethod = UrlMethod(u)
+  def search: Search = Search()
 }

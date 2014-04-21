@@ -6,7 +6,8 @@ lazy val commonSettings: Seq[Def.Setting[_]] = Seq(
   version := s"dispatch${dispatchVersion}_${baseVersion}",
   organization := "com.eed3si9n",
   scalaVersion := "2.10.4",
-  crossScalaVersions := Seq("2.10.4")
+  crossScalaVersions := Seq("2.10.4"),
+  fork in run := true
 )
 
 lazy val root = (project in file(".")).

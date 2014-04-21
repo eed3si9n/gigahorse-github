@@ -15,7 +15,7 @@ object Repo extends Parse with CommonField {
       owner = User(owner(json)),
       name = name(json),
       full_name = full_name(json),
-      description = description(json),
+      description_opt = description_opt(json),
       `private` = `private`(json),
       fork = fork(json),
       url = url(json),
@@ -25,19 +25,20 @@ object Repo extends Parse with CommonField {
       ssh_url = ssh_url(json),
       // svn_url = svn_url(json).head,
       // mirror_url: Option[String],
-      homepage = homepage(json),
+      homepage_opt = homepage_opt(json),
       language_opt = language_opt(json),
       forks_count = forks_count(json),
       watchers_count = watchers_count(json),
       size = size(json),
       default_branch = default_branch(json),
       open_issues_count = open_issues_count(json),
-      pushed_at = pushed_at(json),
+      pushed_at_opt = pushed_at_opt(json),
       created_at = created_at(json),
       updated_at = updated_at(json))
 
   val full_name   = 'full_name.![String]
   val description = 'description.![String]
+  val description_opt = 'description.?[String]
   val `private`   = 'private.![Boolean]
   val fork        = 'fork.![Boolean]
   val clone_url   = 'clone_url.![String]
@@ -45,15 +46,15 @@ object Repo extends Parse with CommonField {
   val ssh_url     = 'ssh_url.![String]
   val svn_url     = 'svn_url.![String]
   val mirror_url_opt = 'mirror_url.?[String]
-  val homepage    = 'homepage.![String]
+  val homepage_opt = 'homepage.?[String]
   val language    = 'language.![String]
   val language_opt = 'language.?[String]
   val forks_count = 'forks_count.![BigInt]
   val watchers_count = 'watchers_count.![BigInt]
   val default_branch = 'default_branch.![String]
   val open_issues_count = 'open_issues_count.![BigInt]
-  val owner       = 'owner.![JObject]
-  val pushed_at   = 'pushed_at.![Calendar]
+  val owner          = 'owner.![JObject]
+  val pushed_at_opt  = 'pushed_at.?[Calendar]
 }
 
 /** represents repository response.
@@ -63,7 +64,7 @@ case class Repo(id: BigInt,
   owner: User,
   name: String,
   full_name: String,
-  description: String,
+  description_opt: Option[String],
   `private`: Boolean,
   fork: Boolean,
   url: String,
@@ -73,7 +74,7 @@ case class Repo(id: BigInt,
   ssh_url: String,
   // svn_url: String,
   // mirror_url: Option[String],
-  homepage: String,
+  homepage_opt: Option[String],
   language_opt: Option[String],
   // forks: BigInt,
   forks_count: BigInt,
@@ -82,7 +83,7 @@ case class Repo(id: BigInt,
   size: BigInt,
   default_branch: String,
   open_issues_count: BigInt,
-  pushed_at: java.util.Calendar,
+  pushed_at_opt: Option[java.util.Calendar],
   created_at: java.util.Calendar,
   updated_at: java.util.Calendar)
 
@@ -341,7 +342,7 @@ object User extends Parse with CommonField {
       id = id(json),
       html_url = html_url(json),
       avatar_url = avatar_url(json),
-      gravatar_id = gravatar_id(json),
+      gravatar_id_opt = gravatar_id_opt(json),
       `type` = `type`(json),
       site_admin = site_admin(json),
       name_opt = name_opt(json),
@@ -351,6 +352,7 @@ object User extends Parse with CommonField {
   val login = 'login.![String]
   val avatar_url = 'avatar_url.![String]
   val gravatar_id = 'gravatar_id.![String]
+  val gravatar_id_opt = 'gravatar_id.?[String]
   val site_admin = 'site_admin.![Boolean]
   val name_opt = 'name.?[String]
   val email_opt = 'email.?[String]
@@ -361,7 +363,7 @@ case class User(url: String,
   id: BigInt,
   html_url: String,
   avatar_url: String,
-  gravatar_id: String,
+  gravatar_id_opt: Option[String],
   `type`: String,
   site_admin: Boolean,
   name_opt: Option[String],
@@ -369,15 +371,21 @@ case class User(url: String,
 
 /** represents pagination.
  */
-case class Paged[A](data: Seq[A], links: Map[String, String]) {
+case class Paged[A](items: Seq[A],
+    links: Map[String, String],
+    total_count_opt: Option[BigInt],
+    incomplete_results_opt: Option[Boolean]) {
   def next_page: Option[String] = links.get("next")
   def last_page: Option[String] = links.get("last")
   def first_page: Option[String] = links.get("first")
   def prev_page: Option[String] = links.get("prev")
 }
 
-object Paged {
-  implicit def pageToSeq[A](paged: Paged[A]): Seq[A] = paged.data
+object Paged extends Parse {
+  implicit def pageToSeq[A](paged: Paged[A]): Seq[A] = paged.items
+  val items = 'items.![List[JValue]]
+  val total_count_opt = 'total_count.?[BigInt]
+  val incomplete_results_opt = 'incomplete_results.?[Boolean]
 
   def parseArray[A](f: JValue => A): Response => Paged[A] = { (res: Response) =>
     val json = as.json4s.Json(res)
@@ -387,7 +395,16 @@ object Paged {
         JArray(array) <- json
         v <- array
       } yield f(v),
-      links)
+      links,
+      None,
+      None)
+  }
+
+  def parseSearchResult[A](f: JValue => A): Response => Paged[A] = { (res: Response) =>
+    val json = as.json4s.Json(res)
+    val links = linkHeader(res)
+    val xs = items(json).toSeq map f
+    Paged(xs, links, total_count_opt(json), incomplete_results_opt(json)) 
   }
 
   def linkHeader(res: Response): Map[String, String] =

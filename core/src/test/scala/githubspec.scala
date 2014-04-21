@@ -62,6 +62,9 @@ class GithubSpec extends Specification { def is = args(sequential = true) ^ s2""
 
   `gh.user(:user)` should
     return a json object that can be parsed using `User`                      ${user2}
+
+  `gh.search.repos("reboot")` should
+    return a json object that can be parsed using `ReposSearch`               ${search1}
                                                                               """
 
   lazy val http = new Http
@@ -240,5 +243,10 @@ class GithubSpec extends Specification { def is = args(sequential = true) ^ s2""
   def user2 = {
     val usr = http(client(gh.user("eed3si9n")) > as.repatch.github.response.User)
     usr().login must_== "eed3si9n"
+  }
+
+  def search1 = {
+    val repos = http(client(gh.search.repos("reboot language:scala")) > as.repatch.github.response.ReposSearch)
+    repos().head.full_name must_== "dispatch/reboot"
   }
 }

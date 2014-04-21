@@ -74,7 +74,7 @@ res1: dispatch.Future[String] = scala.concurrent.impl.Promise$DefaultPromise@60c
 >
 > The pagination info is included in the Link header. It is important to follow these Link header values instead of constructing your own URLs.
 
-paged responses can be parsed into `Paged[A]`, which wraps `Seq[A]` and url links included in HTTP header.
+paged responses can be parsed into `Paged[A]`, which wraps `Seq[A]` url links included in HTTP header, and optionally total count for search result.
 
 ```scala
 scala> val iss = http(client(gh.repo("dispatch", "reboot").issues.page(1).per_page(1)) > as.repatch.github.response.Issues)
@@ -293,4 +293,22 @@ iss: dispatch.Future[repatch.github.response.Paged[repatch.github.response.Issue
 scala> iss()
 res11: repatch.github.response.Paged[repatch.github.response.Issue] = 
 Paged(List(Issue(https://api.github.com/repos/eed3si9n/scalaxb/issues/232,Some(https://github.com/eed3si9n/scalaxb/issues/232),...
+```
+
+## [search](https://developer.github.com/v3/search/)
+
+### search repositories
+
+> Find repositories via various criteria. This method returns up to 100 results per page.
+
+here's how to run search for repositories. note response hander needs to be `ReposSearch` instead of `Repos`.
+
+```scala
+scala> val repos = http(client(gh.search.repos("reboot language:scala")) > as.repatch.github.response.ReposSearch)
+repos: dispatch.Future[repatch.github.response.Paged[repatch.github.response.Repo]] = scala.concurrent.impl.Promise$DefaultPromise@38b556d2
+
+scala> repos()
+res0: repatch.github.response.Paged[repatch.github.response.Repo] = Paged(List(Repo(2960515,User(https://api.github.com/users/dispatch,dispatch,1115066,https://github.com/dispatch,https://avatars.githubusercontent.com/u/1115066?,Some(c4050b114966f021d1d91d0b5baabd5c),Organization,false,None,None),reboot,dispatch/reboot,Some(Dispatch with AsyncHttpClient as the underlying library),false,false,https://api.github.com/repos/dispatch/reboot,https://github.com/dispatch/reboot,https://github.com/dispatch/reboot.git,git://github.com/dispatch/reboot.git,git@github.com:dispatch/reboot.git,Some(),Some(Scala),57,188,1012,master,16,Some(java.util.GregorianCalendar[time=?,areFieldsSet=false,areAllFieldsSet=true,lenient=true,zone=sun.util.calendar.ZoneInfo[id="GMT+00:00",offset=0,dstSavings=0,useDayli...
+scala> repos().total_count_opt
+res1: Option[BigInt] = Some(7)
 ```

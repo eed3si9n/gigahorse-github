@@ -68,7 +68,7 @@ case class GitBlobs(repo: Repos, sha: String, mimes: Seq[MediaType]) extends Met
 }
 
 /** represents issues request.
- * @https://developer.github.com/v3/issues/
+ * @see https://developer.github.com/v3/issues/
  */
 case class Issues(params: Map[String, String] = Map()) extends Method with Param[Issues]
     with SortParam[Issues] with PageParam[Issues] {
@@ -101,6 +101,21 @@ case class Users(name: String) extends Method {
   def complete = _ / "users" / name
 }
 
+/** @see https://developer.github.com/v3/search/
+ */
+case class Search() {
+  def repos(q: String): SearchRepos = SearchRepos(q)
+}
+
+case class SearchRepos(q: String, params: Map[String, String] = Map()) extends Method
+    with Param[SearchRepos] with SortParam[SearchRepos] with PageParam[SearchRepos] {
+  def complete = _ / "search" / "repositories" <<? (params + ("q" -> q))
+  def param[A: Show](key: String)(value: A): SearchRepos =
+    copy(params = params + (key -> implicitly[Show[A]].shows(value)))
+}
+
+/** represents raw URL. used for navigating to the next page in paginated results.
+ */
 case class UrlMethod(url: String, params: Map[String, String] = Map()) extends Method
     with Param[UrlMethod] with SortParam[UrlMethod] with PageParam[UrlMethod] {
   def complete = { _ => dispatch.url(url) }
