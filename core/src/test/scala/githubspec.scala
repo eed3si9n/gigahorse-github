@@ -14,6 +14,9 @@ class GithubSpec extends Specification { def is = args(sequential = true) ^ s2""
     return a json object that can be parsed with extractors                   ${repos2}
     return a json object that can be parsed using `Repo`"                     ${repos3}
 
+  `gh.user.repos` should
+    return a json object that can be parsed using `Repos`                     ${repos4}
+
   `gh.repo(:owner, :repo).git_refs` should
     return a json array that can be parsed using `GitRefs`                    ${references1}
 
@@ -128,6 +131,11 @@ class GithubSpec extends Specification { def is = args(sequential = true) ^ s2""
     repos().full_name must_== "dispatch/reboot"
   }
   
+  def repos4 = {
+    val repos = http(client(gh.user.repos.asc) > as.repatch.github.response.Repos)
+    repos().head.full_name must_!= "foo"
+  }
+
   def references1 = {
     // `client(repos(user, repo).git_refs)` constructs a request to
     // https://api.github.com/repos/dispatch/reboot/git/refs

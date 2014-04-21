@@ -33,7 +33,7 @@ case class GitRefs(repo: Repos, ref: Option[String], params: Map[String, String]
   def tags(tag: String): GitRefs = copy(ref = Some("tags/" + tag))
 
   val complete = { req: Req =>
-    val request = repo.complete(req) / "git" / "refs"
+    val request = repo.complete(req) / "git" / "refs" <<? params
     ref match {
       case Some(r) => request / r
       case _ => request
@@ -93,22 +93,33 @@ case class ReposIssues(repo: Repos, params: Map[String, String] = Map()) extends
   val labels    = 'labels.?[Seq[String]]
 }
 
-case class User() extends Method {
-  def complete = _ / "user"
-  def orgs: UserOrgs = UserOrgs() 
-}
+/** represents users request.
+ * @see https://developer.github.com/v3/users/
+ */
+case class Users(name: Option[String]) extends Method {
+  def complete = { req: Req =>
+    name match {
+      case Some(n) => req / "users" / n
+      case None    => req / "user"
+    }
+  }
 
-case class Users(name: String) extends Method {
-  def complete = _ / "users" / name
+  def repos: UsersRepos = UsersRepos(this)
   def orgs: UsersOrgs = UsersOrgs(this)
 }
 
-case class UserOrgs() extends Method {
-  def complete = _ / "user" / "orgs"
+case class UsersRepos(user: Users, params: Map[String, String] = Map()) extends Method
+    with Param[UsersRepos] with SortParam[UsersRepos] with PageParam[UsersRepos] {
+  def complete = user.complete(_) / "repos" <<? params
+  def param[A: Show](key: String)(value: A): UsersRepos =
+    copy(params = params + (key -> implicitly[Show[A]].shows(value)))
 }
 
-case class UsersOrgs(user: Users) extends Method {
-  def complete = user.complete(_) / "orgs"
+case class UsersOrgs(user: Users, params: Map[String, String] = Map()) extends Method
+    with Param[UsersOrgs] with SortParam[UsersOrgs] with PageParam[UsersOrgs] {
+  def complete = user.complete(_) / "orgs" <<? params
+  def param[A: Show](key: String)(value: A): UsersOrgs =
+    copy(params = params + (key -> implicitly[Show[A]].shows(value)))
 }
 
 /** @see https://developer.github.com/v3/search/
@@ -152,7 +163,7 @@ case class SearchUsers(q: String, params: Map[String, String] = Map()) extends M
  */
 case class UrlMethod(url: String, params: Map[String, String] = Map()) extends Method
     with Param[UrlMethod] with SortParam[UrlMethod] with PageParam[UrlMethod] {
-  def complete = { _ => dispatch.url(url) }
+  def complete = { _ => dispatch.url(url) <<? params }
   def param[A: Show](key: String)(value: A): UrlMethod =
     copy(params = params + (key -> implicitly[Show[A]].shows(value)))
 }
@@ -163,9 +174,12 @@ trait PageParam[R] { self: Param[R] =>
 }
 
 trait SortParam[R] { self: Param[R] =>
-  val sort    = 'sort.?[String]
+  val sort      = 'sort.?[String]
   val direction = 'direction.?[String]
+  val `type`    = 'type.?[String]
   val since   = 'since.?[Calendar]
+  def asc: R  = direction("asc")
+  def desc: R = direction("desc") 
 }
 
 trait Param[R] {

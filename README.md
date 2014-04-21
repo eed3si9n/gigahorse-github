@@ -121,6 +121,28 @@ scala> x()
 res5: repatch.github.response.Repo = Repo(2960515,User(1115066,Organization,dispatch,https://avatars.githubusercontent.com/u/1115066?,c4050b114966f021d1d91d0b5baabd5c,...
 ```
 
+> List repositories for the authenticated user.
+
+here's how to list repositories for the authenticated user. optionally, `sort` parameter can be passed in.
+
+```scala
+scala> val repos = http(client(gh.user.repos.sort("pushed").asc) > as.repatch.github.response.Repos)
+repos: dispatch.Future[repatch.github.response.Paged[repatch.github.response.Repo]] = scala.concurrent.impl.Promise$DefaultPromise@18c4022a
+
+scala> repos()
+res0: repatch.github.response.Paged[repatch.github.response.Repo] = Paged(List(Repo(536856,https://api.github.com/repos/eed3si9n/eed3si9n.github.com...
+```
+
+here's how to do the same for a specific user.
+
+```scala
+scala> val repos = http(client(gh.user("eed3si9n").repos.sort("pushed").desc) > as.repatch.github.response.Repos)
+repos: dispatch.Future[repatch.github.response.Paged[repatch.github.response.Repo]] = scala.concurrent.impl.Promise$DefaultPromise@24b9d8c7
+
+scala> repos()
+res0: repatch.github.response.Paged[repatch.github.response.Repo] = Paged(List(Repo(2770384,https://api.github.com/repos/eed3si9n/repatch-github...
+```
+
 ## [references](https://developer.github.com/v3/git/refs/)
 
 > This will return an array of all the references on the system, including things like notes and stashes if they exist on the server.
