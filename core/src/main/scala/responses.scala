@@ -5,6 +5,7 @@ import org.json4s._
 import java.util.{GregorianCalendar, Calendar, Locale}
 import com.ning.http.client.Response
 import collection.immutable.Map
+import repatch.github.request.Show
 
 /** provides parsing support for a github repository response.
  * @see http://developer.github.com/v3/repos/
@@ -241,7 +242,7 @@ object Issue extends Parse with CommonField {
 
   val html_url_opt = 'html_url.?[String]
   val number_opt = 'number.?[BigInt]
-  val state_opt = 'state.?[String]
+  val state_opt = 'state.?[IssueState]
   val title_opt = 'title.?[String]
   val body_opt = 'body.?[String]
   val user_opt = 'user.?[JObject]
@@ -256,7 +257,7 @@ object Issue extends Parse with CommonField {
 case class Issue(url: String,
   html_url_opt: Option[String],
   number_opt: Option[BigInt],
-  state_opt: Option[String],
+  state_opt: Option[IssueState],
   title_opt: Option[String],
   body_opt: Option[String],
   user_opt: Option[User],
@@ -268,6 +269,31 @@ case class Issue(url: String,
   closed_at_opt: Option[Calendar],
   created_at_opt: Option[Calendar],
   updated_at_opt: Option[Calendar])
+
+object IssueState {
+  def open: IssueState = Open
+  def closed: IssueState = Closed
+  def all: IssueState = All
+
+  case object Open extends IssueState {
+    override def toString: String = "open"
+  }
+  case object Closed extends IssueState {
+    override def toString: String = "closed"
+  }
+  case object All extends IssueState {
+    override def toString: String = "all"
+  }
+
+  implicit val stateRead: ReadJs[IssueState] = ReadJs.readJs {
+    case JString("open")   => Open
+    case JString("closed") => Closed
+    case JString("all")    => All
+  }
+  implicit val stateShow: Show[IssueState] = Show.showA
+}
+
+sealed trait IssueState {}
 
 object Label extends Parse with CommonField {
   def apply(json: JValue): Label =

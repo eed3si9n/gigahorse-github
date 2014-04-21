@@ -309,12 +309,13 @@ Paged(List(Issue(https://api.github.com/repos/sbt/sbt/issues/1149,Some(https://g
 parameters can be passed in as chained method calls.
 
 ```scala
-scala> val iss = http(client(gh.issues.labels(Seq("bug")).direction("asc")) > as.repatch.github.response.Issues)
-iss: dispatch.Future[repatch.github.response.Paged[repatch.github.response.Issue]] = scala.concurrent.impl.Promise$DefaultPromise@d30bfb7
-
-scala> iss()
-res11: repatch.github.response.Paged[repatch.github.response.Issue] = 
-Paged(List(Issue(https://api.github.com/repos/eed3si9n/scalaxb/issues/232,Some(https://github.com/eed3si9n/scalaxb/issues/232),...
+scala> {
+         import gh.IssueState._
+         val iss = http(client(gh.issues.state(closed).labels("bug").asc) > as.repatch.github.response.Issues)
+         iss()
+       }
+res0: repatch.github.response.Paged[repatch.github.response.Issue] = 
+Paged(List(Issue(https://api.github.com/repos/sbt/sbt/issues/1229,Some(https://github.com/sbt/sbt/issues/1229),Some(1229),...
 ```
 
 ## [users](https://developer.github.com/v3/users/)

@@ -76,8 +76,8 @@ case class Issues(params: Map[String, String] = Map()) extends Method with Param
   def param[A: Show](key: String)(value: A): Issues =
     copy(params = params + (key -> implicitly[Show[A]].shows(value)))
   val filter  = 'filter.?[String]
-  val state   = 'state.?[String]
-  val labels  = 'labels.?[Seq[String]]
+  val state   = 'state.?[IssueState]
+  def labels(xs: String*) = param("labels")(xs.toSeq)
 }
 
 case class ReposIssues(repo: Repos, params: Map[String, String] = Map()) extends Method
@@ -86,11 +86,11 @@ case class ReposIssues(repo: Repos, params: Map[String, String] = Map()) extends
   def param[A: Show](key: String)(value: A): ReposIssues =
     copy(params = params + (key -> implicitly[Show[A]].shows(value)))
   val milestone = 'milestone.?[String]
-  val state     = 'state.?[String]
+  val state     = 'state.?[IssueState]
   val assignee  = 'assignee.?[String]
   val creator   = 'creator.?[String]
   val mentioned = 'mentioned.?[String]
-  val labels    = 'labels.?[Seq[String]]
+  def labels(xs: String*) = param("labels")(xs.toSeq)
 }
 
 /** represents users request.

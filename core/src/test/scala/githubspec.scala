@@ -51,7 +51,7 @@ class GithubSpec extends Specification { def is = args(sequential = true) ^ s2""
   `gh.issues` should
     return a json array that can be parsed using `Issues`                     ${issues1}
 
-  `gh.issues.labels(Seq("bug")).direction("asc")` should
+  `gh.issues.labels("bug").asc` should
     return a json array that can be parsed using `Issues`                     ${issues2}
 
   `gh.repo(:owner, :repo).issues` should
@@ -235,26 +235,30 @@ class GithubSpec extends Specification { def is = args(sequential = true) ^ s2""
   }
 
   def issues1 = {
+    import repatch.github.response.IssueState._
     val iss = http(client(gh.issues) > as.repatch.github.response.Issues)
-    iss().head.state_opt must_== Some("open")
+    iss().head.state_opt must_== Some(open)
   }
 
   def issues2 = {
-    val iss = http(client(gh.issues.labels(Seq("bug")).direction("asc")) > as.repatch.github.response.Issues)
-    iss().head.state_opt must_== Some("open")
+    import gh.IssueState._
+    val iss = http(client(gh.issues.state(closed).labels("bug").asc) > as.repatch.github.response.Issues)
+    iss().head.state_opt must_== Some(closed)
   }
 
   def issues3 = {
+    import repatch.github.response.IssueState._
     val iss = http(client(gh.repo(user, name).issues) > as.repatch.github.response.Issues)
-    iss().head.state_opt must_== Some("open")
+    iss().head.state_opt must_== Some(open)
   }
 
   def pagination1 = {
+    import repatch.github.response.IssueState._
     val iss = http(client(gh.repo(user, name).issues.page(1).per_page(1)) > as.repatch.github.response.Issues)
     iss().next_page match {
       case Some(next) =>
         val iss2 = http(client(gh.url(next)) > as.repatch.github.response.Issues)
-        iss2().head.state_opt must_== Some("open")
+        iss2().head.state_opt must_== Some(open)
       case _ => sys.error("next page was not found")
     }
 
