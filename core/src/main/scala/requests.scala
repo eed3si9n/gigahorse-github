@@ -94,23 +94,57 @@ case class ReposIssues(repo: Repos, params: Map[String, String] = Map()) extends
 }
 
 case class User() extends Method {
-  def complete = _ / "user"  
+  def complete = _ / "user"
+  def orgs: UserOrgs = UserOrgs() 
 }
 
 case class Users(name: String) extends Method {
   def complete = _ / "users" / name
+  def orgs: UsersOrgs = UsersOrgs(this)
+}
+
+case class UserOrgs() extends Method {
+  def complete = _ / "user" / "orgs"
+}
+
+case class UsersOrgs(user: Users) extends Method {
+  def complete = user.complete(_) / "orgs"
 }
 
 /** @see https://developer.github.com/v3/search/
  */
 case class Search() {
   def repos(q: String): SearchRepos = SearchRepos(q)
+  def code(q: String): SearchCode = SearchCode(q)
+  def issues(q: String): SearchIssues = SearchIssues(q)
+  def users(q: String): SearchUsers = SearchUsers(q)
 }
 
 case class SearchRepos(q: String, params: Map[String, String] = Map()) extends Method
     with Param[SearchRepos] with SortParam[SearchRepos] with PageParam[SearchRepos] {
   def complete = _ / "search" / "repositories" <<? (params + ("q" -> q))
   def param[A: Show](key: String)(value: A): SearchRepos =
+    copy(params = params + (key -> implicitly[Show[A]].shows(value)))
+}
+
+case class SearchCode(q: String, params: Map[String, String] = Map()) extends Method
+    with Param[SearchCode] with SortParam[SearchCode] with PageParam[SearchCode] {
+  def complete = _ / "search" / "code" <<? (params + ("q" -> q))
+  def param[A: Show](key: String)(value: A): SearchCode =
+    copy(params = params + (key -> implicitly[Show[A]].shows(value)))
+}
+
+case class SearchIssues(q: String, params: Map[String, String] = Map()) extends Method
+    with Param[SearchIssues] with SortParam[SearchIssues] with PageParam[SearchIssues] {
+  def complete = _ / "search" / "issues" <<? (params + ("q" -> q))
+  def param[A: Show](key: String)(value: A): SearchIssues =
+    copy(params = params + (key -> implicitly[Show[A]].shows(value)))
+}
+
+case class SearchUsers(q: String, params: Map[String, String] = Map()) extends Method
+    with Param[SearchUsers] with SortParam[SearchUsers] with PageParam[SearchUsers] {
+  def complete = _ / "search" / "users" <<? (params + ("q" -> q))
+  def param[A: Show](key: String)(value: A): SearchUsers =
     copy(params = params + (key -> implicitly[Show[A]].shows(value)))
 }
 

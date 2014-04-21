@@ -12,80 +12,71 @@ import collection.immutable.Map
 object Repo extends Parse with CommonField {
   def apply(json: JValue): Repo =
     Repo(id = id(json),
+      url = url(json),
       owner = User(owner(json)),
       name = name(json),
       full_name = full_name(json),
       description_opt = description_opt(json),
       `private` = `private`(json),
       fork = fork(json),
-      url = url(json),
       html_url = html_url(json),
-      clone_url = clone_url(json),
-      git_url = git_url(json),
-      ssh_url = ssh_url(json),
-      // svn_url = svn_url(json).head,
-      // mirror_url: Option[String],
+      clone_url_opt = clone_url_opt(json),
+      git_url_opt = git_url_opt(json),
+      ssh_url_opt = ssh_url_opt(json),
       homepage_opt = homepage_opt(json),
       language_opt = language_opt(json),
-      forks_count = forks_count(json),
-      watchers_count = watchers_count(json),
-      size = size(json),
-      default_branch = default_branch(json),
-      open_issues_count = open_issues_count(json),
+      forks_count_opt = forks_count_opt(json),
+      watchers_count_opt = watchers_count_opt(json),
+      size_opt = size_opt(json),
+      default_branch_opt = default_branch_opt(json),
+      open_issues_count_opt = open_issues_count_opt(json),
       pushed_at_opt = pushed_at_opt(json),
-      created_at = created_at(json),
-      updated_at = updated_at(json))
+      created_at_opt = created_at_opt(json),
+      updated_at_opt = updated_at_opt(json))
 
   val full_name   = 'full_name.![String]
-  val description = 'description.![String]
-  val description_opt = 'description.?[String]
   val `private`   = 'private.![Boolean]
   val fork        = 'fork.![Boolean]
-  val clone_url   = 'clone_url.![String]
-  val git_url     = 'git_url.![String]
-  val ssh_url     = 'ssh_url.![String]
-  val svn_url     = 'svn_url.![String]
-  val mirror_url_opt = 'mirror_url.?[String]
-  val homepage_opt = 'homepage.?[String]
-  val language    = 'language.![String]
-  val language_opt = 'language.?[String]
-  val forks_count = 'forks_count.![BigInt]
-  val watchers_count = 'watchers_count.![BigInt]
-  val default_branch = 'default_branch.![String]
-  val open_issues_count = 'open_issues_count.![BigInt]
-  val owner          = 'owner.![JObject]
-  val pushed_at_opt  = 'pushed_at.?[Calendar]
+  val clone_url_opt   = 'clone_url.?[String]
+  val git_url_opt     = 'git_url.?[String]
+  val ssh_url_opt     = 'ssh_url.?[String]
+  val svn_url_opt     = 'svn_url.?[String]
+  val mirror_url_opt  = 'mirror_url.?[String]
+  val homepage_opt    = 'homepage.?[String]
+  val language_opt    = 'language.?[String]
+  val forks_count_opt = 'forks_count.?[BigInt]
+  val watchers_count_opt  = 'watchers_count.?[BigInt]
+  val default_branch_opt  = 'default_branch.?[String]
+  val open_issues_count_opt = 'open_issues_count.?[BigInt]
+  val owner           = 'owner.![JObject]
+  val pushed_at_opt   = 'pushed_at.?[Calendar]
 }
 
 /** represents repository response.
  * @see http://developer.github.com/v3/repos/
  */
 case class Repo(id: BigInt,
+  url: String,
   owner: User,
   name: String,
   full_name: String,
   description_opt: Option[String],
   `private`: Boolean,
   fork: Boolean,
-  url: String,
   html_url: String,
-  clone_url: String,
-  git_url: String,
-  ssh_url: String,
-  // svn_url: String,
-  // mirror_url: Option[String],
+  clone_url_opt: Option[String], // does not return during code search
+  git_url_opt: Option[String], // does not return during code search 
+  ssh_url_opt: Option[String], // does not return during code search
   homepage_opt: Option[String],
   language_opt: Option[String],
-  // forks: BigInt,
-  forks_count: BigInt,
-  // watchers: BigInt,
-  watchers_count: BigInt,
-  size: BigInt,
-  default_branch: String,
-  open_issues_count: BigInt,
+  forks_count_opt: Option[BigInt],
+  watchers_count_opt: Option[BigInt],
+  size_opt: Option[BigInt],
+  default_branch_opt: Option[String],
+  open_issues_count_opt: Option[BigInt],
   pushed_at_opt: Option[java.util.Calendar],
-  created_at: java.util.Calendar,
-  updated_at: java.util.Calendar)
+  created_at_opt: Option[java.util.Calendar],
+  updated_at_opt: Option[java.util.Calendar])
 
 /** represents git reference response.
  * @see http://developer.github.com/v3/git/refs/
@@ -260,8 +251,6 @@ object Issue extends Parse with CommonField {
   val comments_opt = 'comments.?[BigInt]
   val pull_request_opt = 'pull_request.?[JObject]
   val closed_at_opt = 'closed_at.?[Calendar]
-  val created_at_opt = 'created_at.?[Calendar]
-  val updated_at_opt = 'updated_at.?[Calendar]
 }
 
 case class Issue(url: String,
@@ -299,19 +288,18 @@ object Milestone extends Parse with CommonField {
       number = number(json),
       state = state(json),
       title = title(json),
-      description = description(json))
+      description_opt = description_opt(json))
 
   val number = 'number.![BigInt]
   val state = 'state.![String]
   val title = 'title.![String]
-  val description = 'description.![String]
 }
 
 case class Milestone(url: String,
   number: BigInt,
   state: String,
   title: String,
-  description: String)
+  description_opt: Option[String])
 
 object PullRequest extends Parse with CommonField {
   def opt(json: JValue): Option[PullRequest] =
@@ -340,20 +328,20 @@ object User extends Parse with CommonField {
     User(url = url(json),
       login = login(json),
       id = id(json),
-      html_url = html_url(json),
-      avatar_url = avatar_url(json),
+      html_url_opt = html_url_opt(json),
+      avatar_url_opt = avatar_url_opt(json),
       gravatar_id_opt = gravatar_id_opt(json),
-      `type` = `type`(json),
-      site_admin = site_admin(json),
+      type_opt = type_opt(json),
+      site_admin_opt = site_admin_opt(json),
       name_opt = name_opt(json),
       email_opt = email_opt(json)
     )
 
   val login = 'login.![String]
-  val avatar_url = 'avatar_url.![String]
-  val gravatar_id = 'gravatar_id.![String]
+  val html_url_opt = 'html_url.?[String]
+  val avatar_url_opt = 'avatar_url.?[String]
   val gravatar_id_opt = 'gravatar_id.?[String]
-  val site_admin = 'site_admin.![Boolean]
+  val site_admin_opt = 'site_admin.?[Boolean]
   val name_opt = 'name.?[String]
   val email_opt = 'email.?[String]
 }
@@ -361,13 +349,77 @@ object User extends Parse with CommonField {
 case class User(url: String,
   login: String,
   id: BigInt,
-  html_url: String,
-  avatar_url: String,
+  html_url_opt: Option[String],
+  avatar_url_opt: Option[String],
   gravatar_id_opt: Option[String],
-  `type`: String,
-  site_admin: Boolean,
+  type_opt: Option[String],
+  site_admin_opt: Option[Boolean],
   name_opt: Option[String],
   email_opt: Option[String])
+
+object BlobRef extends Parse with CommonField {
+  def apply(json: JValue): BlobRef =
+    BlobRef(sha = sha(json),
+      url = url(json),
+      name = name(json),
+      path = path(json),
+      git_url = git_url(json),
+      html_url = html_url(json),
+      repository = Repo(repository(json))
+      )
+
+  val repository = 'repository.![JObject]
+}
+
+case class BlobRef(sha: String,
+  url: String,
+  name: String,
+  path: String,
+  git_url: String,
+  html_url: String,
+  repository: Repo)
+
+object TextMatches extends Parse {
+  def apply(json: JValue): TextMatches =
+    TextMatches(text_matches(json) map TextMatch.apply)
+
+  val text_matches = 'text_matches.![List[JValue]]
+}
+
+case class TextMatches(text_matches: Seq[TextMatch])
+
+object TextMatch extends Parse {
+  def apply(json: JValue): TextMatch =
+    TextMatch(object_url(json),
+      object_type(json),
+      property(json),
+      fragment(json),
+      matches(json) map SearchTerm.apply)
+
+  val object_url = 'object_url.![String]
+  val object_type = 'object_type.![String]
+  val property = 'property.![String]
+  val fragment = 'fragment.![String]
+  val matches = 'matches.![List[JValue]]
+}
+
+case class TextMatch(object_url: String,
+  object_type: String,
+  property: String,
+  fragment: String,
+  matches: Seq[SearchTerm])
+
+object SearchTerm extends Parse {
+  def apply(json: JValue): SearchTerm =
+    SearchTerm(text = text(json),
+      indices = indices(json))
+
+  val text = 'text.![String]
+  val indices = 'indices.![List[BigInt]]
+}
+
+case class SearchTerm(text: String,
+  indices: Seq[BigInt])
 
 /** represents pagination.
  */
@@ -429,6 +481,7 @@ trait CommonField { self: Parse =>
   val path = 'path.![String]
   val mode = 'mode.![String]
   val `type` = 'type.![String]
+  val type_opt = 'type.?[String]
   val size = 'size.![BigInt]
   val size_opt = 'size.?[BigInt]
   val message = 'message.![String]
@@ -436,11 +489,17 @@ trait CommonField { self: Parse =>
   val email = 'email.![String]
   val date = 'date.![Calendar]
   val created_at = 'created_at.![Calendar]
+  val created_at_opt = 'created_at.?[Calendar]
   val updated_at = 'updated_at.![Calendar]
+  val updated_at_opt = 'updated_at.?[Calendar]
   val encoding = 'encoding.![String]
   val content = 'content.![String]
   val git_object = 'object.![JObject]
+  val git_url     = 'git_url.![String]
   val html_url = 'html_url.![String]
+
+  // description can always be null
+  val description_opt = 'description.?[String]
 }
 
 trait Parse {

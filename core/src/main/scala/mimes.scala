@@ -3,14 +3,15 @@ package repatch.github.request
 trait Mime[R] {
   import MediaType._
   def mime(ms: Seq[MediaType]): R
-  def raw       = mime(Seq(versionMediaType.rawBlob))
-  def diff      = mime(Seq(versionMediaType.diff))
-  def patch     = mime(Seq(versionMediaType.patch))
-  def rawBody   = mime(Seq(json, versionMediaType.rawBody))
-  def textBody  = mime(Seq(json, versionMediaType.textBody))
-  def htmlBody  = mime(Seq(json, versionMediaType.htmlBody))
-  def fullBody  = mime(Seq(json, versionMediaType.fullBody))
-  def versionMediaType = v3
+  def raw       = mime(Seq(current_version.raw_blob))
+  def diff      = mime(Seq(current_version.diff))
+  def patch     = mime(Seq(current_version.patch))
+  def raw_body  = mime(Seq(json, current_version.raw_body))
+  def text_body = mime(Seq(json, current_version.text_body))
+  def html_body = mime(Seq(json, current_version.html_body))
+  def full_body = mime(Seq(json, current_version.full_body))
+  def text_match = mime(Seq(json, current_version.text_match))
+  def current_version = v3
 }
 
 sealed trait MediaType {}
@@ -21,25 +22,26 @@ object MediaType {
     def version(v: String): GithubMediaType = copy(_version = Some(v))
     def param(p: String): GithubMediaType = copy(_param = Some(p))
     def format(f: String): GithubMediaType = copy(_format = Some(f))
-    def formatJson: GithubMediaType = format("json")
-    def noFormat: GithubMediaType = copy(_format = None)
-    def diff: GithubMediaType = param("diff").noFormat
-    def patch: GithubMediaType = param("patch").noFormat
-    def rawBlob: GithubMediaType = param("raw").noFormat
-    def rawBody: GithubMediaType = param("raw").formatJson
-    def textBody: GithubMediaType = param("text").formatJson
-    def htmlBody: GithubMediaType = param("html").formatJson
-    def fullBody: GithubMediaType = param("full").formatJson
+    def format_json: GithubMediaType = format("json")
+    def no_format: GithubMediaType = copy(_format = None)
+    def diff: GithubMediaType = param("diff").no_format
+    def patch: GithubMediaType = param("patch").no_format
+    def text_match: GithubMediaType = param("text-match").format_json
+    def raw_blob: GithubMediaType = param("raw").no_format
+    def raw_body: GithubMediaType = param("raw").format_json
+    def text_body: GithubMediaType = param("text").format_json
+    def html_body: GithubMediaType = param("html").format_json
+    def full_body: GithubMediaType = param("full").format_json
   }
 
   implicit val mediaTypeShow = new Show[MediaType] {
     def shows(a: MediaType): String = a match {
       case StringMediaType(x) => x
-      case GithubMediaType(v, p, pl) =>
+      case GithubMediaType(v, p, f) =>
         val version = v map { "." + _ } getOrElse ""
         val param   = p map { "." + _ } getOrElse ""
-        val plus    = pl map { "+" + _ } getOrElse ""
-        s"""application/vnd.github.$version$param$plus"""
+        val fmt     = f map { "+" + _ } getOrElse ""
+        s"""application/vnd.github.$version$param$fmt"""
     }
   }
 
@@ -47,7 +49,7 @@ object MediaType {
    * application/json
    * application/vnd.github.v3+json
    */
-  val default: Seq[MediaType] = Seq(json, v3.formatJson)
+  val default: Seq[MediaType] = Seq(json, v3.format_json)
   lazy val json: MediaType = StringMediaType("application/json")
   lazy val v3 = githubMediaType.version("v3")
   lazy val githubMediaType = GithubMediaType(None, None, None)

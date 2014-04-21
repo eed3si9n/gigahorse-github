@@ -13,5 +13,12 @@ package object response {
   val GitBlob:      Response => res.GitBlob = Json andThen res.GitBlob.apply
   val Issues:       Response => res.Paged[res.Issue] = res.Paged.parseArray(res.Issue.apply)
   val User:         Response => res.User = Json andThen res.User.apply
+  val Users:        Response => res.Paged[res.User] = res.Paged.parseArray(res.User.apply)
+  val Orgs:         Response => res.Paged[res.User] = Users
+
   val ReposSearch:  Response => res.Paged[res.Repo] = res.Paged.parseSearchResult(res.Repo.apply)
+  val CodeSearch:   Response => res.Paged[res.BlobRef] = res.Paged.parseSearchResult(res.BlobRef.apply)
+  val IssuesSearch: Response => res.Paged[res.Issue] = res.Paged.parseSearchResult(res.Issue.apply)
+  val UsersSearch:  Response => res.Paged[res.User] = res.Paged.parseSearchResult(res.User.apply)
+  val TextMatches:  Response => res.Paged[res.TextMatches] = res.Paged.parseSearchResult(res.TextMatches.apply)
 }

@@ -63,8 +63,25 @@ class GithubSpec extends Specification { def is = args(sequential = true) ^ s2""
   `gh.user(:user)` should
     return a json object that can be parsed using `User`                      ${user2}
 
-  `gh.search.repos("reboot")` should
+  `gh.user.orgs` should
+    return a json object that can be parsed using `Orgs`                      ${orgs1}
+
+  `gh.user(:user).orgs` should
+    return a json object that can be parsed using `Orgs`                      ${orgs2}
+
+  `gh.search.repos("reboot language:scala")` should
     return a json object that can be parsed using `ReposSearch`               ${search1}
+
+  `gh.search.code("case class Req in:file repo:dispatch/reboot")` should
+    return a json object that can be parsed using `CodeSearch`                ${search2}
+    return a json object that can be parsed using `TextMatches` given
+    HTTP header Accept: application/vnd.github.v3.text-match+json             ${search3}
+
+  `gh.search.issues("oauth client access repo:eed3si9n/repatch-github")` should
+    return a json object that can be parsed using `IssuesSearch`              ${search4}
+
+  `gh.search.users("eed3si9n")` should
+    return a json object that can be parsed using `UsersSearch`               ${search5}
                                                                               """
 
   lazy val http = new Http
@@ -245,8 +262,40 @@ class GithubSpec extends Specification { def is = args(sequential = true) ^ s2""
     usr().login must_== "eed3si9n"
   }
 
+  def orgs1 = {
+    val orgs = http(client(gh.user.orgs) > as.repatch.github.response.Orgs)
+    orgs().head.login must_!= "foo"
+  }
+
+  def orgs2 = {
+    val orgs = http(client(gh.user("eed3si9n").orgs) > as.repatch.github.response.Orgs)
+    orgs().head.login must_== "ny-scala"
+  }
+
   def search1 = {
     val repos = http(client(gh.search.repos("reboot language:scala")) > as.repatch.github.response.ReposSearch)
     repos().head.full_name must_== "dispatch/reboot"
+  }
+
+  def search2 = {
+    val code = http(client(gh.search.code("\"case class Req\" in:file repo:dispatch/reboot")) > 
+      as.repatch.github.response.CodeSearch)
+    code().head.path must_== "core/src/main/scala/requests.scala"
+  }
+
+  def search3 = {
+    val code = http(client.text_match(gh.search.code("\"case class Req\" in:file repo:dispatch/reboot")) >
+      as.repatch.github.response.TextMatches)
+    code().head.text_matches.head.fragment must contain("case class Req") 
+  }
+
+  def search4 = {
+    val iss = http(client(gh.search.issues("oauth client access repo:eed3si9n/repatch-github")) > as.repatch.github.response.IssuesSearch)
+    iss().head.number_opt must_== Some(1)
+  }
+
+  def search5 = {
+    val users = http(client(gh.search.users("eed3si9n")) > as.repatch.github.response.UsersSearch)
+    users().head.login must_== "eed3si9n"
   }
 }
