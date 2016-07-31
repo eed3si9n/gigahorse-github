@@ -4,7 +4,8 @@ lazy val gigahorseCore = "com.eed3si9n" %% "gigahorse-core" % gigahorseVersion
 lazy val scalatest = "org.scalatest" %% "scalatest" % "3.0.0-RC4"
 lazy val sbtIo = "org.scala-sbt" %% "io" % "1.0.0-M6"
 // lazy val slip28JsonAst = "org.mdedetrich" %% "scala-json-ast" % "1.0.0-M1"
-lazy val sjsonNewScalaJson = "com.eed3si9n" %%  "sjson-new-scalajson" % "0.4.1"
+lazy val sjsonNewScalaJson = "com.eed3si9n" %%  "sjson-new-scalajson" % "0.4.2-SNAPSHOT"
+lazy val sjsonNewCore = "com.eed3si9n" %%  "sjson-new-core" % "0.4.2-SNAPSHOT"
 
 lazy val commonSettings: Seq[Def.Setting[_]] = Seq(
   version := s"gigahorse${gigahorseVersion}_${baseVersion}",
@@ -27,7 +28,7 @@ lazy val core = (project in file("core")).
   settings(commonSettings: _*).
   settings(
     name := "gigahorse-github",
-    libraryDependencies ++= List(gigahorseCore, sjsonNewScalaJson),
+    libraryDependencies ++= List(gigahorseCore, sjsonNewScalaJson, sjsonNewCore),
     // libraryDependencies += "net.databinder.dispatch" %% "dispatch-json4s-native" % dispatchVersion,
     libraryDependencies += scalatest % Test,
   //   initialCommands in console := """import dispatch._, Defaults._

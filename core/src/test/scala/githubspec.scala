@@ -8,6 +8,7 @@ import gigahorse._
 import gigahorse.github.Github
 // import org.json4s._
 import scala.json.ast.unsafe._
+import sjsonnew.support.scalajson.unsafe.CompactPrinter
 
 class GithubSpec extends AsyncFlatSpec {
   lazy val client = Github.noAuthClient(Nil) // gh.LocalConfigClient()
@@ -23,6 +24,7 @@ class GithubSpec extends AsyncFlatSpec {
       // Returned json object
       val f = http.run(client(Github.repo(user, name)), Github.asJson)
       f map { json =>
+        // println(CompactPrinter(json))
         val o = json match {
           case o: JObject => o
           case _          => sys.error("JObject expected")
@@ -36,27 +38,13 @@ class GithubSpec extends AsyncFlatSpec {
       }
     }
 
-    // it should "return a json object that can be parsed with extractors" in
-    //   withHttp { http =>
-    //     // Returned json object can also be parsed field-by-field using an extractor
-    //     val x = http.run(client(Github.repo(user, name)), Github.asJson)
-    //     x map { json =>
-    //       import gigahorse.github.response.Repo._
-    //       owner(json)
-    //     }
-    //     {
-    //       import gigahorse.github.response.User._
-    //       assert(login(o()) == "eed3si9n")
-    //     }
-    //   }
-
     it should "return a json object that can be parsed using `asRepo`" in
       withHttp { http =>
         // Returned json object can then be parsed using `as.repatch.github.response.Repo`,
         // which returns a Repo case class
         val f = http.run(client(Github.repo(user, name)), Github.asRepo)
         f map { repo =>
-          println(repo)
+          // println(repo)
           assert(repo.full_name == "eed3si9n/gigahorse")
         }
       }

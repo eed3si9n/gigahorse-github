@@ -9,11 +9,6 @@
       "target": "Scala",
       "fields": [
         {
-          "name": "id",
-          "type": "long",
-          "since": "0.0.0"
-        },
-        {
           "name": "url",
           "type": "String",
           "since": "0.0.0"
@@ -21,6 +16,16 @@
         {
           "name": "name",
           "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "id",
+          "type": "long",
+          "since": "0.0.0"
+        },
+        {
+          "name": "owner",
+          "type": "gigahorse.github.response.User",
           "since": "0.0.0"
         },
         {
@@ -45,8 +50,157 @@
         },
         {
           "name": "html_url",
+          "type": "String?",
+          "since": "0.1.0",
+          "default": "None"
+        },
+        {
+          "name": "clone_url",
+          "type": "String?",
+          "since": "0.1.0",
+          "default": "None"
+        },
+        {
+          "name": "git_url",
+          "type": "String?",
+          "since": "0.1.0",
+          "default": "None"
+        },
+        {
+          "name": "ssh_url",
+          "type": "String?",
+          "since": "0.1.0",
+          "default": "None"
+        },
+        {
+          "name": "homepage",
+          "type": "String?",
+          "since": "0.1.0",
+          "default": "None"
+        },
+        {
+          "name": "language",
+          "type": "String?",
+          "since": "0.1.0",
+          "default": "None"
+        },
+        {
+          "name": "forks_count",
+          "type": "long?",
+          "since": "0.1.0",
+          "default": "None"
+        },
+        {
+          "name": "watchers_count",
+          "type": "long?",
+          "since": "0.1.0",
+          "default": "None"
+        },
+        {
+          "name": "size",
+          "type": "long?",
+          "since": "0.1.0",
+          "default": "None"
+        },
+        {
+          "name": "default_branch",
+          "type": "String?",
+          "since": "0.1.0",
+          "default": "None"
+        },
+        {
+          "name": "open_issues_count",
+          "type": "long?",
+          "since": "0.1.0",
+          "default": "None"
+        },
+        {
+          "name": "pushed_at",
+          "type": "java.util.Calendar?",
+          "since": "0.1.0",
+          "default": "None"
+        },
+        {
+          "name": "created_at",
+          "type": "java.util.Calendar?",
+          "since": "0.1.0",
+          "default": "None"
+        },
+        {
+          "name": "updated_at",
+          "type": "java.util.Calendar?",
+          "since": "0.1.0",
+          "default": "None"
+        }
+      ],
+      "extra": [
+      ]
+    },
+
+
+    {
+      "name": "User",
+      "namespace": "gigahorse.github.response",
+      "type": "record",
+      "target": "Scala",
+      "fields": [
+
+        {
+          "name": "url",
           "type": "String",
           "since": "0.0.0"
+        },
+        {
+          "name": "login",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "id",
+          "type": "long",
+          "since": "0.0.0"
+        },
+        {
+          "name": "html_url",
+          "type": "String?",
+          "since": "0.1.0",
+          "default": "None"
+        },
+        {
+          "name": "avatar_url",
+          "type": "String?",
+          "since": "0.1.0",
+          "default": "None"
+        },
+        {
+          "name": "gravatar_id",
+          "type": "String?",
+          "since": "0.1.0",
+          "default": "None"
+        },
+        {
+          "name": "type",
+          "type": "String?",
+          "since": "0.1.0",
+          "default": "None"
+        },
+        {
+          "name": "site_admin",
+          "type": "boolean?",
+          "since": "0.1.0",
+          "default": "None"
+        },
+        {
+          "name": "name",
+          "type": "String?",
+          "since": "0.1.0",
+          "default": "None"
+        },
+        {
+          "name": "email",
+          "type": "String?",
+          "since": "0.1.0",
+          "default": "None"
         }
       ],
       "extra": [
