@@ -1,4 +1,4 @@
-package repatch.github.request
+package gigahorse.github
 
 import java.util.Calendar
 

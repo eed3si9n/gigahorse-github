@@ -1,0 +1,56 @@
+{
+  "codecNamespace": "gigahorse.github.response",
+  "fullCodec": "CustomJsonProtocol",
+  "types": [
+    {
+      "name": "Repo",
+      "namespace": "gigahorse.github.response",
+      "type": "record",
+      "target": "Scala",
+      "fields": [
+        {
+          "name": "id",
+          "type": "long",
+          "since": "0.0.0"
+        },
+        {
+          "name": "url",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "full_name",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "description",
+          "type": "String?",
+          "since": "0.0.0"
+        },
+        {
+          "name": "private",
+          "type": "boolean",
+          "since": "0.0.0"
+        },
+        {
+          "name": "fork",
+          "type": "boolean",
+          "since": "0.0.0"
+        },
+        {
+          "name": "html_url",
+          "type": "String",
+          "since": "0.0.0"
+        }
+      ],
+      "extra": [
+      ]
+    }
+  ]
+}

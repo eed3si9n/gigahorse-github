@@ -1,7 +1,7 @@
-repatch-github
---------------
+gigahorse-github
+----------------
 
-this is a dispatch plugin for github API v3.
+gigahorse-github is a Gigahorse plugin for github API v3.
 
 ## authentication
 
