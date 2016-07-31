@@ -28,7 +28,10 @@ object Github {
       Parser.parseFromByteBuffer(buffer).get
     }
   val asRepo: Response => res.Repo =
-    asJson andThen Converter.fromJsonUnsafe[response.Repo]
+    asJson andThen Converter.fromJsonUnsafe[res.Repo]
+
+  val asGitRefs: Response => res.Paged[res.GitRef] =
+    res.Paged.parseArray(Converter.fromJsonUnsafe[res.GitRef])
 }
 
 // package object response {

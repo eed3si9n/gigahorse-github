@@ -139,6 +139,58 @@
 
 
     {
+      "name": "GitRef",
+      "namespace": "gigahorse.github.response",
+      "type": "record",
+      "target": "Scala",
+      "fields": [
+        {
+          "name": "url",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "ref",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "object",
+          "type": "gigahorse.github.response.GitObject",
+          "since": "0.0.0"
+        }
+      ],
+      "extra": [
+      ]
+    },
+
+    {
+      "name": "GitObject",
+      "namespace": "gigahorse.github.response",
+      "type": "record",
+      "target": "Scala",
+      "fields": [
+        {
+          "name": "url",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "sha",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "type",
+          "type": "String",
+          "since": "0.0.0"
+        }
+      ],
+      "extra": [
+      ]
+    },
+
+    {
       "name": "User",
       "namespace": "gigahorse.github.response",
       "type": "record",

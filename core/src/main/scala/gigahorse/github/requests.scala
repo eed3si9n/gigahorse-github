@@ -20,7 +20,7 @@ object RequestBuilder {
  * @see https://developer.github.com/v3/repos/
  */
 case class Repos(owner: String, name: String) extends RequestBuilder {
-  // def git_refs = GitRefs(this, None)
+  def git_refs = GitRefs(this, None)
   // def git_commit(ref: res.GitRef): GitCommits = GitCommits(this, ref.git_object.sha)
   // def git_commit(sha: String): GitCommits = GitCommits(this, sha)
   // def git_trees(commit: res.GitCommit): GitTrees = GitTrees(this, commit.tree.sha)
@@ -31,25 +31,24 @@ case class Repos(owner: String, name: String) extends RequestBuilder {
   def build: Request = Gigahorse.url(s"$baseUrl/repos/$owner/$name")
 }
 
-// /** represents git reference request.
-//  * @see http://developer.github.com/v3/git/refs/ 
-//  */
-// case class GitRefs(repo: Repos, ref: Option[String], params: Map[String, String] = Map()) extends Method {
-//   def param[A: Show](key: String)(value: A): GitRefs =
-//     copy(params = params + (key -> implicitly[Show[A]].shows(value)))
-//   def heads: GitRefs = copy(ref = Some("heads"))
-//   def heads(branch: String): GitRefs = copy(ref = Some("heads/" + branch))
-//   def tags: GitRefs = copy(ref = Some("tags"))
-//   def tags(tag: String): GitRefs = copy(ref = Some("tags/" + tag))
+/** represents git reference request.
+ * @see http://developer.github.com/v3/git/refs/
+ */
+case class GitRefs(repo: Repos, ref: Option[String], params: Map[String, String] = Map()) extends RequestBuilder {
+  // def param[A: Show](key: String)(value: A): GitRefs =
+  //   copy(params = params + (key -> implicitly[Show[A]].shows(value)))
+  // def heads: GitRefs = copy(ref = Some("heads"))
+  // def heads(branch: String): GitRefs = copy(ref = Some("heads/" + branch))
+  // def tags: GitRefs = copy(ref = Some("tags"))
+  // def tags(tag: String): GitRefs = copy(ref = Some("tags/" + tag))
 
-//   val complete = { req: Req =>
-//     val request = repo.complete(req) / "git" / "refs" <<? params
-//     ref match {
-//       case Some(r) => request / r
-//       case _ => request
-//     }
-//   } 
-// }
+  def build: Request =
+    Gigahorse.url(s"${repo.build.url}/git/refs" + (ref match {
+      case Some(r) => s"/$r"
+      case None    => ""
+    })).
+      addQueryString(params.toList: _*)
+}
 
 // /** represents git commit request.
 //  * @see http://developer.github.com/v3/git/commits/

@@ -17,7 +17,7 @@ class GithubSpec extends AsyncFlatSpec {
   val tree_sha = "b1193d20d761654b7fc35a48cd64b53aedc7a697"
   val commit_sha = "bcf6d255317088ca1e32c6e6ecd4dce1979ac718"
   val blob_sha = "3baebe52555bc73ad1c9a94261c4552fb8d771cd"
-  "gh.repo(:owner, :repo)" should "return a json object that can be parsed manually" in
+  "Github.repo(:owner, :repo)" should "return a json object that can be parsed manually" in
     withHttp { http =>
       // `client(repo(user, name))` constructs a request to
       // https://api.github.com/repos/dispatch/reboot
@@ -38,30 +38,38 @@ class GithubSpec extends AsyncFlatSpec {
       }
     }
 
-    it should "return a json object that can be parsed using `asRepo`" in
-      withHttp { http =>
-        // Returned json object can then be parsed using `as.repatch.github.response.Repo`,
-        // which returns a Repo case class
-        val f = http.run(client(Github.repo(user, name)), Github.asRepo)
-        f map { repo =>
-          // println(repo)
-          assert(repo.full_name == "eed3si9n/gigahorse")
-        }
+  it should "return a json object that can be parsed using `asRepo`" in
+    withHttp { http =>
+      // Returned json object can then be parsed using `as.repatch.github.response.Repo`,
+      // which returns a Repo case class
+      val f = http.run(client(Github.repo(user, name)), Github.asRepo)
+      f map { repo =>
+        // println(repo)
+        assert(repo.full_name == "eed3si9n/gigahorse")
       }
+    }
+
+  // "Github.user.repos" should "return a json object that can be parsed using `asRepos`" in
+  //   withHttp { http =>
+  //     val repos = http(client(gh.user.repos.asc) > as.repatch.github.response.Repos)
+  //     repos().head.full_name must_!= "foo"
+  //   }
+
+  "Github.repo(:owner, :repo).git_refs" should "return a json array that can be parsed using `GitRefs`" in
+    withHttp { http =>
+      // `client(repos(user, repo).git_refs)` constructs a request to
+      // https://api.github.com/repos/dispatch/reboot/git/refs
+      // Returned json array can then be parsed using `GitRefs`,
+      // which returns a seqence of GitRef case classes
+      val refs = http.run(client(Github.repo(user, name).git_refs), Github.asGitRefs)
+      refs map { rs =>
+        val master = (rs find {_.ref == "refs/heads/0.1.x"}).head
+        assert(master.`object`.`type` == "commit")
+      }
+    }
 
 /*s2"""
   This is a specification to check the github handler
-
-  `gh.repo(:owner, :repo)` should
-    return a json object that can be parsed manually                          ${repos1}
-    return a json object that can be parsed with extractors                   ${repos2}
-    return a json object that can be parsed using `Repo`"                     ${repos3}
-
-  `gh.user.repos` should
-    return a json object that can be parsed using `Repos`                     ${repos4}
-
-  `gh.repo(:owner, :repo).git_refs` should
-    return a json array that can be parsed using `GitRefs`                    ${references1}
 
   `gh.repo(:owner, :repo).git_refs.heads(\"master\")` should
     return a json object that can be parsed using `GitRef`                    ${references2}
@@ -130,21 +138,6 @@ class GithubSpec extends AsyncFlatSpec {
     return a json object that can be parsed using `UsersSearch`               ${search5}
                                                                               """
 */
-
-  // def repos4 = {
-  //   val repos = http(client(gh.user.repos.asc) > as.repatch.github.response.Repos)
-  //   repos().head.full_name must_!= "foo"
-  // }
-
-  // def references1 = {
-  //   // `client(repos(user, repo).git_refs)` constructs a request to
-  //   // https://api.github.com/repos/dispatch/reboot/git/refs
-  //   // Returned json array can then be parsed using `GitRefs`,  
-  //   // which returns a seqence of GitRef case classes
-  //   val refs = http(client(gh.repo(user, name).git_refs) > as.repatch.github.response.GitRefs)
-  //   val master = (refs() find {_.ref == "refs/heads/master"}).head
-  //   master.git_object.`type` must_== "commit"
-  // }
 
   // def references2 = {
   //   val ref = http(client(gh.repo(user, name).git_refs.heads("master")) > as.repatch.github.response.GitRef)
