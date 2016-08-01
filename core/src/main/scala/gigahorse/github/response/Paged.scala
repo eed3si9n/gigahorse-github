@@ -3,13 +3,15 @@ package response
 
 import gigahorse.Response
 import scala.json.ast.unsafe._
+import sjsonnew.JsonFormat
+import sjsonnew.support.scalajson.unsafe.Converter
 
 /** represents pagination.
  */
 case class Paged[A](items: Vector[A],
     links: Map[String, String],
-    total_count_opt: Option[Long],
-    incomplete_results_opt: Option[Boolean]) {
+    total_count: Option[Long],
+    incomplete_results: Option[Boolean]) {
   def next_page: Option[String] = links.get("next")
   def last_page: Option[String] = links.get("last")
   def first_page: Option[String] = links.get("first")
@@ -18,11 +20,8 @@ case class Paged[A](items: Vector[A],
 
 object Paged {
   implicit def pageToSeq[A](paged: Paged[A]): Vector[A] = paged.items
-  // val items = 'items.![List[JValue]]
-  // val total_count_opt = 'total_count.?[BigInt]
-  // val incomplete_results_opt = 'incomplete_results.?[Boolean]
 
-  def parseArray[A](f: JValue => A): Response => Paged[A] =
+  def parseArray[A: JsonFormat]: Response => Paged[A] =
     (res: Response) => {
       val json = Github.asJson(res)
       val links = linkHeader(res)
@@ -30,10 +29,10 @@ object Paged {
         case JArray(ary) => ary
         case _           => sys.error(s"JArray expected but found: $json")
       }
-      Paged(ary.toVector map f, links, None, None)
+      Paged(ary.toVector map Converter.fromJsonUnsafe[A], links, None, None)
     }
 
-  def parseSearchResult[A](f: JValue => A): Response => Paged[A] = 
+  def parseSearchResult[A: JsonFormat]: Response => Paged[A] =
     (res: Response) => {
       val json = Github.asJson(res)
       val links = linkHeader(res)
@@ -47,7 +46,7 @@ object Paged {
         case JArray(ary) => ary.toVector
         case _           => sys.error(s"JArray expected but found: $v")
       })).flatten
-      val xs = items map f
+      val xs = items map Converter.fromJsonUnsafe[A]
       val total_count: Option[Long] = (for {
         JField("total_count", v) <- fields
       } yield (v match {

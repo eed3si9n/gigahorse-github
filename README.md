@@ -398,7 +398,7 @@ repos: scala.concurrent.Future[gigahorse.github.response.Paged[gigahorse.github.
 scala> Await.result(repos, 2.minutes)
 res30: gigahorse.github.response.Paged[gigahorse.github.response.Repo] = Paged(Vector(Repo(https://api.github.com/repos/eed3si9n/gigahorse, gigahorse, 64110679,
 
-scala> Await.result(repos, 2.minutes).total_count_opt
+scala> Await.result(repos, 2.minutes).total_count
 res31: Option[Long] = Some(2)
 ```
 
