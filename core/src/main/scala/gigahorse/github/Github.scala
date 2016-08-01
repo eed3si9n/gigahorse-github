@@ -13,6 +13,8 @@ object Github {
   def noAuthClient(mimes: List[MediaType]) = NoAuthClient(mimes)
   def basicAuthClient(user: String, pass: String, mimes: List[MediaType]) =
     BasicAuthClient(user, pass, mimes)
+  def oauthClient(token: String, mimes: List[MediaType]) =
+    OAuthClient(token, mimes)
   def localConfigClient: LocalConfigClient = LocalConfigClient()
   def localConfigClient(key: String) = LocalConfigClient(key)
   def localConfigClient(key: String, mimes: List[MediaType]) = LocalConfigClient(key, mimes)

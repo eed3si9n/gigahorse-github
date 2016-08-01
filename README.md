@@ -7,10 +7,10 @@ gigahorse-github is a Gigahorse plugin for github API v3.
 
 you can choose one from the four authenticating clients:
 
-- Local Github Config (`LocalConfigClient`)
-- OAuth (`OAuthClient`)
-- BasicAuth (`BasicAuthClient`)
-- none (`NoAuthClient`)
+- Local Github Config (`Github.localConfigClient`)
+- OAuth (`Github.oauthClient`)
+- BasicAuth (`Github.basicAuthClient`)
+- none (`Github.noAuthClient`)
 
 Local Github Config client uses OAuth token stored in the environment varable `GITHUB_TOKEN` or git config `github.token`.
 
@@ -31,31 +31,31 @@ $ git config --global --add github.token your_token
 now we can hit the GitHub API using the token:
 
 ```scala
-scala> import dispatch._, Defaults._, repatch.github.{request => gh}
-import dispatch._
-import Defaults._
-import repatch.github.{request => gh}
+scala> import gigahorse._, gigahorse.github.Github
+import gigahorse._
+import gigahorse.github.Github
 
-scala> val http = new Http
-http: dispatch.Http = Http(com.ning.http.client.AsyncHttpClient@70e54515)
+scala> import scala.concurrent._, duration._
+import scala.concurrent._
+import duration._
 
-scala> val client = gh.LocalConfigClient()
-client: repatch.github.request.LocalConfigClient = LocalConfigClient(OAuthClient(xxxxxxxx,List(StringMediaType(application/json), GithubMediaType(Some(v3),None,Some(json)))))
+scala> val client = Github.localConfigClient
+client: gigahorse.github.LocalConfigClient = LocalConfigClient(OAuthClient(****, List(StringMediaType(application/json), GithubMediaType(Some(v3),None,Some(json)))))
 
-scala> http(client(gh.repo("dispatch", "reboot")) > as.json4s.Json)
-res0: dispatch.Future[org.json4s.JValue] = scala.concurrent.impl.Promise$DefaultPromise@136e6221
-
-scala> res0()
-res1: org.json4s.JValue = JObject(List((id,JInt(2960515)), (name,JString(reboot)), (full_name,JString(dispatch/reboot))...
+scala> Gigahorse.withHttp { http =>
+         val f = http.run(client(Github.repo("eed3si9n", "gigahorse")), Github.asRepo)
+         Await.result(f, 2.minutes)
+       }
+res0: gigahorse.github.response.Repo = Repo(https://api.github.com/repos/eed3si9n/gigahorse, gigahorse, 64110679, User(https://api.github.com/users/eed3si9n, eed3si9n, 184683, Some(https://github.com/eed3si9n), Some(https://avatars.githubusercontent.com/u/184683?v=3), Some(), Some(User), Some(true), None, None), eed3si9n/gigahorse, Some(an HTTP client for Scala with Async Http Client underneath), true, true, Some(https://github.com/eed3si9n/gigahorse), Some(https://github.com/eed3si9n/gigahorse.git), Some(git://github.com/eed3si9n/gigahorse.git), Some(git@github.com:eed3si9n/gigahorse.git), Some(http://eed3si9n.com/gigahorse), Some(Scala), Some(0), Some(23), Some(187), Some(0.1.x), Some(0), Some(java.util.GregorianCalendar[time=?,areFieldsSet=false,areAllFieldsSet=true,lenient=true,zone...
 ```
 
 ## general design
 
-following the ethos of Dispatch Reboot, repatch-github splits request hander and response handler apart. the request handler is generally responsible for constructing the request URL sometimes with additional parameters or HTTP headers.
+Following the ethos of Gigahorse (and Dispatch Reboot), gigahorse-github splits request hander and response handler apart. the request handler is generally responsible for constructing the request URL sometimes with additional parameters or HTTP headers.
 
-you can choose what format you would like Dispatch to return the response in. if you want raw string, you specify `as.String`. if you want json, you say `as.json4s.Json`. to assist the json parsing, repatch-github provides known field names as extractors under the companion object of the response classes.
+You can choose what format you would like Gigahorse to return the response in. If you want raw string, you specify `Github.asString`. if you want JSON, you say `Github.asJson`.
 
-if you just want a case classes of commonly used fields, you say `as.repatch.github.response.Repo` etc, and it would give you `Repo` case class.
+If you just want case classes of commonly used fields, you say `Github.asRepo` etc, and it would give you `Repo` case class.
 
 ### media type
 
@@ -64,8 +64,19 @@ if you just want a case classes of commonly used fields, you say `as.repatch.git
 media type variations are supported on authenticating clients by mixing in `Mime[R]`. Here's an example of `raw` format:
 
 ```scala
-scala> http(client.raw(gh.repo("dispatch", "reboot").git_blob(blob_sha)) > as.String)
-res1: dispatch.Future[String] = scala.concurrent.impl.Promise$DefaultPromise@60c821c4
+scala> val blob_sha = "ac28ec8ee30e89ae807f3ef52f471ffc68783b28"
+blob_sha: String = ac28ec8ee30e89ae807f3ef52f471ffc68783b28
+
+scala> Gigahorse.withHttp { http =>
+         val f = http.run(client.raw(Github.repo("eed3si9n", "gigahorse").git_blob(blob_sha)), Github.asString)
+         Await.result(f, 2.minutes)
+       }
+res1: String =
+"project/pf.sbt
+pf.sbt
+
+rsync.sh
+"
 ```
 
 ### pagination
@@ -77,18 +88,27 @@ res1: dispatch.Future[String] = scala.concurrent.impl.Promise$DefaultPromise@60c
 paged responses can be parsed into `Paged[A]`, which wraps `Seq[A]` url links included in HTTP header, and optionally total count for search result.
 
 ```scala
-scala> val iss = http(client(gh.repo("dispatch", "reboot").issues.page(1).per_page(1)) > as.repatch.github.response.Issues)
-iss: dispatch.Future[repatch.github.response.Paged[repatch.github.response.Issue]] = scala.concurrent.impl.Promise$DefaultPromise@442e7590
+scala> val http = Gigahorse.http(Gigahorse.config)
+http: gigahorse.HttpClient = AchHttpClient(com.ning.http.client.AsyncHttpClientConfig@6c8de61d)
 
-scala> iss().next_page
-res1: Option[String] = Some(https://api.github.com/repositories/2960515/issues?page=2&per_page=1)
+scala> val f = http.run(client(Github.repo("sbt", "sbt").issues.page(1).per_page(1)), Github.asIssues)
+f: scala.concurrent.Future[gigahorse.github.response.Paged[gigahorse.github.response.Issue]] = List()
 
-scala> val iss2 = http(client(gh.url(iss().next_page.get)) > as.repatch.github.response.Issues)
-iss2: dispatch.Future[repatch.github.response.Paged[repatch.github.response.Issue]] = scala.concurrent.impl.Promise$DefaultPromise@7c0d3bdb
+scala> val iss = Await.result(f, 2.minutes)
+iss: gigahorse.github.response.Paged[gigahorse.github.response.Issue] =
+Paged(Vector(Issue(https://api.github.com/repos/sbt/sbt/issues/2686, Some(https://github.com/sbt/sbt/issues/2686), Some(2686), Some(open), Some(updateSbtClassifiers ...
 
-scala> iss2()
-res2: repatch.github.response.Paged[repatch.github.response.Issue] = 
-Paged(List(Issue(https://api.github.com/repos/dispatch/reboot/issues/75,Some(https://github.com/dispatch/reboot/issues/75),...
+scala> iss.next_page
+res2: Option[String] = Some(https://api.github.com/repositories/279553/issues?page=2&per_page=1)
+
+scala> val f2 = http.run(client(Github.url(iss.next_page.get)), Github.asIssues)
+f2: scala.concurrent.Future[gigahorse.github.response.Paged[gigahorse.github.response.Issue]] = List()
+
+scala> val iss2 = Await.result(f2, 2.minutes)
+iss2: gigahorse.github.response.Paged[gigahorse.github.response.Issue] =
+Paged(Vector(Issue(https://api.github.com/repos/sbt/sbt/issues/2685, Some(https://github.com/sbt/sbt/issues/2685), Some(2685), Some(open), Some(scripted ...
+
+scala> http.close // make sure you call this
 ```
 
 ## [repositories](https://developer.github.com/v3/repos/)
@@ -96,29 +116,26 @@ Paged(List(Issue(https://api.github.com/repos/dispatch/reboot/issues/75,Some(htt
 here's to querying for a repository as Json.
 
 ```scala
-scala> val x = http(client(gh.repo("dispatch", "reboot")) > as.json4s.Json)
-x: dispatch.Future[org.json4s.JValue] = scala.concurrent.impl.Promise$DefaultPromise@2be9d442
-
+scala> Gigahorse.withHttp(Gigahorse.config) { http =>
+         val f = http.run(client(Github.repo("eed3si9n", "gigahorse")), Github.asJson)
+         Await.result(f, 2.minutes)
+       }
+res5: scala.json.ast.unsafe.JValue = JObject([Lscala.json.ast.unsafe.JField;@2daef479)
 scala> val json = x()
 json: org.json4s.JValue = JObject(List((id,JInt(2960515)), (name,JString(reboot)), (full_name,JString(dispatch/reboot)), (owner,JObject(List((login,JString(dispatch)), (id,JInt(1115066)), ....
 
-scala> {
-         import repatch.github.response.Repo._
-         import repatch.github.response.User._
-         login(owner(json))
-       }
-res0: String = dispatch
+scala> CompactPrinter(res5)
+res6: String = {"default_branch":"0.1.x","stargazers_url":"https://api.github.com/repos/eed3si9n/gigahorse/stargazers",....
 ```
 
 here's the same query using case class response handler.
 
-
 ```scala
-scala> val x = http(client(gh.repo("dispatch", "reboot")) > as.repatch.github.response.Repo)
-x: dispatch.Future[repatch.github.response.Repo] = scala.concurrent.impl.Promise$DefaultPromise@15447f19
-
-scala> x()
-res5: repatch.github.response.Repo = Repo(2960515,User(1115066,Organization,dispatch,https://avatars.githubusercontent.com/u/1115066?,c4050b114966f021d1d91d0b5baabd5c,...
+scala> val repo = Gigahorse.withHttp(Gigahorse.config) { http =>
+         val f = http.run(client(Github.repo("eed3si9n", "gigahorse")), Github.asRepo)
+         Await.result(f, 2.minutes)
+       }
+repo: gigahorse.github.response.Repo = Repo(https://api.github.com/repos/eed3si9n/gigahorse, gigahorse, 64110679,....
 ```
 
 > List repositories for the authenticated user.
@@ -126,21 +143,21 @@ res5: repatch.github.response.Repo = Repo(2960515,User(1115066,Organization,disp
 here's how to list repositories for the authenticated user. optionally, `sort` parameter can be passed in.
 
 ```scala
-scala> val repos = http(client(gh.user.repos.sort("pushed").asc) > as.repatch.github.response.Repos)
-repos: dispatch.Future[repatch.github.response.Paged[repatch.github.response.Repo]] = scala.concurrent.impl.Promise$DefaultPromise@18c4022a
-
-scala> repos()
-res0: repatch.github.response.Paged[repatch.github.response.Repo] = Paged(List(Repo(536856,https://api.github.com/repos/eed3si9n/eed3si9n.github.com...
+scala> val repos = Gigahorse.withHttp(Gigahorse.config) { http =>
+         val f = http.run(client(Github.user.repos.sort("pushed").asc), Github.asRepos)
+         Await.result(f, 2.minutes)
+       }
+repos: gigahorse.github.response.Paged[gigahorse.github.response.Repo] = Paged(Vector(Repo(https://api.github.com/repos/eed3si9n/eed3si9n.github.com...
 ```
 
 here's how to do the same for a specific user.
 
 ```scala
-scala> val repos = http(client(gh.user("eed3si9n").repos.sort("pushed").desc) > as.repatch.github.response.Repos)
-repos: dispatch.Future[repatch.github.response.Paged[repatch.github.response.Repo]] = scala.concurrent.impl.Promise$DefaultPromise@24b9d8c7
-
-scala> repos()
-res0: repatch.github.response.Paged[repatch.github.response.Repo] = Paged(List(Repo(2770384,https://api.github.com/repos/eed3si9n/repatch-github...
+scala> val repos = Gigahorse.withHttp(Gigahorse.config) { http =>
+         val f = http.run(client(Github.user("eed3si9n").repos.sort("pushed").asc), Github.asRepos)
+         Await.result(f, 2.minutes)
+       }
+repos: gigahorse.github.response.Paged[gigahorse.github.response.Repo] = Paged(Vector(Repo(https://api.github.com/repos/eed3si9n/eed3si9n.github.com...
 ```
 
 ## [references](https://developer.github.com/v3/git/refs/)
@@ -148,33 +165,41 @@ res0: repatch.github.response.Paged[repatch.github.response.Repo] = Paged(List(R
 > This will return an array of all the references on the system, including things like notes and stashes if they exist on the server.
 
 ```scala
-scala> val refs = http(client(gh.repo("dispatch", "reboot").git_refs) > as.repatch.github.response.GitRefs)
-refs: dispatch.Future[repatch.github.response.Paged[repatch.github.response.GitRef]] = scala.concurrent.impl.Promise$DefaultPromise@6ea6ba8d
+scala> val http = Gigahorse.http(Gigahorse.config)
+http: gigahorse.HttpClient = AchHttpClient(com.ning.http.client.AsyncHttpClientConfig@416e404f)
 
-scala> refs()
-res3: repatch.github.response.Paged[repatch.github.response.GitRef] = Paged(List(GitRef(refs/heads/0.9.x,https://api.github.com/repos/dispatch/reboot/git/refs/heads/0.9.x,GitObject(e547dd41a38e5d3c40576d00c929b25fc6d333a6...
+scala> val refs = http.run(client(Github.repo("eed3si9n", "gigahorse").git_refs), Github.asGitRefs)
+refs: scala.concurrent.Future[gigahorse.github.response.Paged[gigahorse.github.response.GitRef]] = List()
+
+scala> Await.result(refs, 2.minutes)
+res9: gigahorse.github.response.Paged[gigahorse.github.response.GitRef] = Paged(Vector(GitRef(....
 ```
 
-> The ref in the URL must be formatted as `heads/branch`, not just `branch`. 
+> The ref in the URL must be formatted as `heads/branch`, not just `branch`.
 
 ```scala
-scala> val ref = http(client(gh.repo("dispatch", "reboot").git_refs.heads("master")) > as.repatch.github.response.GitRef)
-ref: dispatch.Future[repatch.github.response.GitRef] = scala.concurrent.impl.Promise$DefaultPromise@7e955067...
+scala> val ref = http.run(client(Github.repo("eed3si9n", "gigahorse").git_refs.heads("0.1.x")), Github.asGitRef)
+ref: scala.concurrent.Future[gigahorse.github.response.GitRef] = List()
 
-scala> ref()
-res2: repatch.github.response.GitRef = GitRef(refs/heads/master,https://api.github.com/repos/dispatch/reboot/git/refs/heads/master,...
+scala> Await.result(refs, 2.minutes)
+res10: gigahorse.github.response.Paged[gigahorse.github.response.GitRef] = Paged(Vector(GitRef(....
 ```
 
 > You can also request a sub-namespace. For example, to get all the tag references, you can call:
 >
 > `GET /repos/:owner/:repo/git/refs/tags`
 
-```scala
-scala> val tagRefs = http(client(gh.repo("dispatch", "reboot").git_refs.tags) > as.repatch.github.response.GitRefs)
-tagRefs: dispatch.Future[repatch.github.response.Paged[repatch.github.response.GitRef]] = scala.concurrent.impl.Promise$DefaultPromise@736577b2
 
-scala> tagRefs()
-res4: repatch.github.response.Paged[repatch.github.response.GitRef] = Paged(List(GitRef(refs/tags/0.9.0,https://api.github.com/repos/dispatch/reboot/git/refs/tags/0.9.0,GitObject(b2097a582b7763c1c1a44b9ead0123ba10dbb273,...
+val tagRefs = http.run(client(Github.repo("eed3si9n", "gigahorse").git_refs.tags), Github.asGitRefs)
+
+```scala
+scala> val tagRefs = http.run(client(Github.repo("eed3si9n", "gigahorse").git_refs.tags), Github.asGitRefs)
+tagRefs: scala.concurrent.Future[gigahorse.github.response.Paged[gigahorse.github.response.GitRef]] = List()
+
+scala> Await.result(tagRefs, 2.minutes)
+res11: gigahorse.github.response.Paged[gigahorse.github.response.GitRef] = Paged(Vector(GitRef(https://api.github.com/repos/eed3si9n/gigahorse/git/refs/tags/v0.1.0...
+
+scala> http.close // make sure you call this
 ```
 
 ## [commits](https://developer.github.com/v3/git/commits/)
@@ -182,25 +207,32 @@ res4: repatch.github.response.Paged[repatch.github.response.GitRef] = Paged(List
 > `GET /repos/:owner/:repo/git/commits/:sha`
 
 ```scala
-scala> val commit = http(client(gh.repo("dispatch", "reboot").git_commit("bcf6d255317088ca1e32c6e6ecd4dce1979ac718")) > as.repatch.github.response.GitCommit)
-commit: dispatch.Future[repatch.github.response.GitCommit] = scala.concurrent.impl.Promise$DefaultPromise@34110e6b
+scala> val commit_sha = "d7b8bb43d003e58f55af7b3592e7ce1fb986d0f3"
+commit_sha: String = d7b8bb43d003e58f55af7b3592e7ce1fb986d0f3
 
-scala> commit()
-res0: repatch.github.response.GitCommit = GitCommit(bcf6d255317088ca1e32c6e6ecd4dce1979ac718,https://api.github.com/repos/dispatch/reboot/git/commits/bcf6d255317088ca1e32c6e6ecd4dce1979ac718...
+scala> val commit = Gigahorse.withHttp(Gigahorse.config) { http =>
+         val f = http.run(client(Github.repo("eed3si9n", "gigahorse").git_commit(commit_sha)), Github.asGitCommit)
+         Await.result(f, 2.minutes)
+       }
+commit: gigahorse.github.response.GitCommit = GitCommit(https://api.github.com/repos/eed3si9n/gigahorse/git/commits/d7b8bb43d003e58f55af7b3592e7ce1fb986d0f3,....
 ```
 
 git reference can also be passed in.
 
 ```scala
-scala> val commit = for {
-         master <- http(client(gh.repo("dispatch", "reboot").git_refs.heads("master")) > as.repatch.github.response.GitRef)
-         x      <- http(client(gh.repo("dispatch", "reboot").git_commit(master)) > as.repatch.github.response.GitCommit)
-       } yield x
-commit: scala.concurrent.Future[repatch.github.response.GitCommit] = scala.concurrent.impl.Promise$DefaultPromise@39439e65
+scala> import scala.concurrent.ExecutionContext.Implicits._
+import scala.concurrent.ExecutionContext.Implicits._
 
-scala> commit()
-res1: repatch.github.response.GitCommit = 
-GitCommit(28dbd9265dd9780124c1412f7f530684dab020ae,https://api.github.com/repos/dispatch/reboot/git/commits/28dbd9265dd9780124c1412f7f530684dab020ae,...
+scala> val commit = Gigahorse.withHttp(Gigahorse.config) { http =>
+         val f = for {
+           // this returns a GitRef case class
+           master <- http.run(client(Github.repo("eed3si9n", "gigahorse").git_refs.heads("0.1.x")), Github.asGitRef)
+           // this returns a GitCommit case class
+           x <- http.run(client(Github.repo("eed3si9n", "gigahorse").git_commit(master)), Github.asGitCommit)
+         } yield x
+         Await.result(f, 2.minutes)
+       }
+GitCommit(https://api.github.com/repos/eed3si9n/gigahorse/git/commits/a68e16e6e572241d0fa19c94e4d393d80362fa4b...
 ```
 
 ## [trees](https://developer.github.com/v3/git/trees/)
@@ -208,35 +240,42 @@ GitCommit(28dbd9265dd9780124c1412f7f530684dab020ae,https://api.github.com/repos/
 > `GET /repos/:owner/:repo/git/trees/:sha`
 
 ```scala
-scala> val trees = http(client(gh.repo("dispatch", "reboot").git_trees("b1193d20d761654b7fc35a48cd64b53aedc7a697")) > as.repatch.github.response.GitTrees)
-trees: dispatch.Future[repatch.github.response.GitTrees] = scala.concurrent.impl.Promise$DefaultPromise@2e39619b
+scala> val http = Gigahorse.http(Gigahorse.config)
+http: gigahorse.HttpClient = AchHttpClient(com.ning.http.client.AsyncHttpClientConfig@1c5e0a3)
 
-scala> trees()
-res5: repatch.github.response.GitTrees = GitTrees(b1193d20d761654b7fc35a48cd64b53aedc7a697,https://api.github.com/repos/dispatch/reboot/git/trees/b1193d20d761654b7fc35a48cd64b53aedc7a697,List(GitTree(3baebe52555bc73ad1c9a94261c4552fb8d771cd,https://api.github.com/repos/dispatch/reboot/git/blobs/3baebe52555bc73ad1c9a94261c4552fb8d771cd,.gitignore,100644,blob,Some(93)), ...
+scala> val tree_sha = "d19f416669ea6a2ffc22ab91bed8a9feff48e778"
+tree_sha: String = d19f416669ea6a2ffc22ab91bed8a9feff48e778
+
+scala> val trees = http.run(client(Github.repo("eed3si9n", "gigahorse").git_trees(tree_sha)), Github.asGitTrees)
+trees: scala.concurrent.Future[gigahorse.github.response.GitTrees] = List()
+
+scala> Await.result(trees, 2.minutes)
+res13: gigahorse.github.response.GitTrees = GitTrees(https://api.github.com/repos/eed3si9n/gigahorse/git/trees/d19f416669ea6a2ffc22ab91bed8a9feff48e778, ...
 ```
 
 > Get a tree recursively
 
 ```scala
-scala> val trees = http(client(gh.repo("dispatch", "reboot").git_trees("b1193d20d761654b7fc35a48cd64b53aedc7a697").recursive(10)) > as.repatch.github.response.GitTrees)
-trees: dispatch.Future[repatch.github.response.GitTrees] = scala.concurrent.impl.Promise$DefaultPromise@1a3fb85d
+scala> val trees = http.run(client(Github.repo("eed3si9n", "gigahorse").git_trees(tree_sha).recursive(10)), Github.asGitTrees)
+trees: scala.concurrent.Future[gigahorse.github.response.GitTrees] = List()
 
-scala> trees()
-res7: repatch.github.response.GitTrees = GitTrees(b1193d20d761654b7fc35a48cd64b53aedc7a697,https://api.github.com/repos/dispatch/reboot/git/trees/b1193d20d761654b7fc35a48cd64b53aedc7a697,List(GitTree(3baebe52555bc73ad1c9a94261c4552fb8d771cd,https://api.github.com/repos/dispatch/reboot/git/blobs/3baebe52555bc73ad1c9a94261c4552fb8d771cd,.gitignore,100644,blob,Some(93)),...
+scala> Await.result(trees, 2.minutes)
+res14: gigahorse.github.response.GitTrees = GitTrees(https://api.github.com/repos/eed3si9n/gigahorse/git/trees/d19f416669ea6a2ffc22ab91bed8a9feff48e778,,...
 ```
 
 here's how to get a tree from a git commit.
 
 ```scala
 scala> val trees = for {
-         master <- http(client(gh.repo("dispatch", "reboot").git_refs.heads("master")) > as.repatch.github.response.GitRef)
-         commit <- http(client(gh.repo("dispatch", "reboot").git_commit(master)) > as.repatch.github.response.GitCommit)
-         x      <- http(client(gh.repo("dispatch", "reboot").git_trees(commit)) > as.repatch.github.response.GitTrees) 
-       } yield x
-trees: scala.concurrent.Future[repatch.github.response.GitTrees] = scala.concurrent.impl.Promise$DefaultPromise@2cbb346d
+         commit <- http.run(client(Github.repo("eed3si9n", "gigahorse").git_commit(commit_sha)), Github.asGitCommit)
+         trees <- http.run(client(Github.repo("eed3si9n", "gigahorse").git_trees(commit)), Github.asGitTrees)
+       } yield trees
+trees: scala.concurrent.Future[gigahorse.github.response.GitTrees] = List()
 
-scala> trees()
-res8: repatch.github.response.GitTrees = GitTrees(4972c45a48bbb73f0f110e58eae6d13ff6349566,https://api.github.com/repos/dispatch/reboot/git/trees/4972c45a48bbb73f0f110e58eae6d13ff6349566,List(GitTree(3baebe52555bc73ad1c9a94261c4552fb8d771cd,https://api.github.com/repos/dispatch/reboot/git/blobs/3baebe52555bc73ad1c9a94261c4552fb8d771cd,.gitignore,100644,blob,Some(93)), ...
+scala> Await.result(trees, 2.minutes)
+res15: gigahorse.github.response.GitTrees = GitTrees(https://api.github.com/repos/eed3si9n/gigahorse/git/trees/d19f416669ea6a2ffc22ab91bed8a9feff48e778, ...
+
+scala> http.close // make sure you call this
 ```
 
 ## [blobs](https://developer.github.com/v3/git/blobs/)
@@ -244,51 +283,36 @@ res8: repatch.github.response.GitTrees = GitTrees(4972c45a48bbb73f0f110e58eae6d1
 > `GET /repos/:owner/:repo/git/blobs/:sha`
 
 ```scala
-scala> val blob_sha = "3baebe52555bc73ad1c9a94261c4552fb8d771cd"
-blob_sha: String = 3baebe52555bc73ad1c9a94261c4552fb8d771cd
+scala> val http = Gigahorse.http(Gigahorse.config)
+http: gigahorse.HttpClient = AchHttpClient(com.ning.http.client.AsyncHttpClientConfig@1c5e0a3)
 
-scala> val blob = http(client(gh.repo("dispatch", "reboot").git_blob(blob_sha)) > as.repatch.github.response.GitBlob)
-blob: dispatch.Future[repatch.github.response.GitBlob] = scala.concurrent.impl.Promise$DefaultPromise@3943a8f9
+scala> val blob_sha = "ac28ec8ee30e89ae807f3ef52f471ffc68783b28"
+blob_sha: String = ac28ec8ee30e89ae807f3ef52f471ffc68783b28
 
-scala> blob()
-res11: repatch.github.response.GitBlob = 
-GitBlob(3baebe52555bc73ad1c9a94261c4552fb8d771cd,https://api.github.com/repos/dispatch/reboot/git/blobs/3baebe52555bc73ad1c9a94261c4552fb8d771cd,base64,LmNsYXNzcGF0aAoucHJvamVjdAouc2V0dGluZ3MKdGFyZ2V0CnNjcmF0Y2gu
-c2NhbGEKc3JjX21hbmFnZWQKKi50ZXN0LnByb3BlcnRpZXMKLmlkZWEKKi5p
-bWwK
-,93)
+scala> val blob = http.run(client(Github.repo("eed3si9n", "gigahorse").git_blob(blob_sha)), Github.asGitBlob)
+blob: scala.concurrent.Future[gigahorse.github.response.GitBlob] = List()
 
-scala> res11.as_utf8
-res12: String = 
-".classpath
-.project
-.settings
-target
-scratch.scala
-src_managed
-*.test.properties
-.idea
-*.iml
-"
+scala> Await.result(blob, 2.minutes)
+res20: gigahorse.github.response.GitBlob =
+GitBlob(https://api.github.com/repos/eed3si9n/gigahorse/git/blobs/ac28ec8ee30e89ae807f3ef52f471ffc68783b28, ac28ec8ee30e89ae807f3ef52f471ffc68783b28, base64, cHJvamVjdC9wZi5zYnQKcGYuc2J0Cgpyc3luYy5zaAo=
+, Some(32))
 ```
 
-git the blob as raw.
+git the blob as raw. (Note `client.raw`)
 
 ```scala
-scala> http(client.raw(gh.repo("dispatch", "reboot").git_blob(blob_sha)) > as.String)
-res1: dispatch.Future[String] = scala.concurrent.impl.Promise$DefaultPromise@60c821c4
+scala> val blob = http.run(client.raw(Github.repo("eed3si9n", "gigahorse").git_blob(blob_sha)), Github.asString)
+blob: scala.concurrent.Future[String] = List()
 
-scala> res1()
-res2: String = 
-".classpath
-.project
-.settings
-target
-scratch.scala
-src_managed
-*.test.properties
-.idea
-*.iml
+scala> Await.result(blob, 2.minutes)
+res21: String =
+"project/pf.sbt
+pf.sbt
+
+rsync.sh
 "
+
+scala> http.close // make sure you call this
 ```
 
 ## [issues](https://developer.github.com/v3/issues/)
@@ -298,24 +322,28 @@ src_managed
 > `GET /issues`
 
 ```scala
-scala> val iss = http(client(gh.issues) > as.repatch.github.response.Issues)
-iss: dispatch.Future[repatch.github.response.Paged[repatch.github.response.Issue]] = scala.concurrent.impl.Promise$DefaultPromise@45b81f84
+scala> val http = Gigahorse.http(Gigahorse.config)
+http: gigahorse.HttpClient = AchHttpClient(com.ning.http.client.AsyncHttpClientConfig@1c5e0a3)
 
-scala> iss()
-res9: repatch.github.response.Paged[repatch.github.response.Issue] = 
-Paged(List(Issue(https://api.github.com/repos/sbt/sbt/issues/1149,Some(https://github.com/sbt/sbt/issues/1149),Some(1149),Some(open),Some(Documentation for AutoPlugins),S...
+scala> val iss = http.run(client(Github.issues), Github.asIssues)
+iss: scala.concurrent.Future[gigahorse.github.response.Paged[gigahorse.github.response.Issue]] = List()
+
+scala> Await.result(iss, 2.minutes)
+res23: gigahorse.github.response.Paged[gigahorse.github.response.Issue] =
+Paged(Vector(Issue(https://api.github.com/repos/sbt/sbt/issues/2573, Some(https://github.com/sbt/sbt/issues/2573), ....
 ```
 
 parameters can be passed in as chained method calls.
 
 ```scala
 scala> {
-         import gh.IssueState._
-         val iss = http(client(gh.issues.state(closed).labels("bug").asc) > as.repatch.github.response.Issues)
-         iss()
+         val iss = http.run(client(Github.issues.state(Github.IssueState.closed).labels("bug").asc), Github.asIssues)
+         Await.result(iss, 2.minutes)
        }
-res0: repatch.github.response.Paged[repatch.github.response.Issue] = 
-Paged(List(Issue(https://api.github.com/repos/sbt/sbt/issues/1229,Some(https://github.com/sbt/sbt/issues/1229),Some(1229),...
+res26: gigahorse.github.response.Paged[gigahorse.github.response.Issue] =
+Paged(Vector(Issue(https://api.github.com/repos/eed3si9n/scalaxb/issues/34...
+
+scala> http.close // make sure you call this
 ```
 
 ## [users](https://developer.github.com/v3/users/)
