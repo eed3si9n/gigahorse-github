@@ -21,7 +21,16 @@ lazy val root = (project in file(".")).
       version := s"gigahorse${gigahorseVersion}_${baseVersion}",
       organization := "com.eed3si9n",
       scalaVersion := "2.11.8",
-      crossScalaVersions := Seq("2.11.8", "2.10.6")
+      crossScalaVersions := Seq("2.11.8", "2.10.6"),
+      organizationName := "eed3si9n",
+      organizationHomepage := Some(url("http://eed3si9n.com/")),
+      homepage := Some(url("https://github.com/eed3si9n/gigahorse-github")),
+      scmInfo := Some(ScmInfo(url("https://github.com/eed3si9n/gigahorse-github"), "git@github.com:eed3si9n/gigahorse-github.git")),
+      developers := List(
+        Developer("eed3si9n", "Eugene Yokota", "@eed3si9n", url("https://github.com/eed3si9n"))
+      ),
+      description := "An HTTP client for Scala with Async Http Client underneath.",
+      licenses := Seq("Apache 2" -> new URL("http://www.apache.org/licenses/LICENSE-2.0.txt"))
     )),
     name := "gigahorse-github-root",
     publish := (),
