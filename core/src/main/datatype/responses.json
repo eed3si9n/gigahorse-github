@@ -644,7 +644,123 @@
       "extra": [
       ]
     },
-
+    {
+      "name": "BlobRef",
+      "namespace": "gigahorse.github.response",
+      "type": "record",
+      "target": "Scala",
+      "fields": [
+        {
+          "name": "url",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "sha",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "path",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "repository",
+          "type": "gigahorse.github.response.Repo",
+          "since": "0.0.0"
+        },
+        {
+          "name": "git_url",
+          "type": "String?",
+          "since": "0.1.0",
+          "default": "None"
+        },
+        {
+          "name": "html_url",
+          "type": "String?",
+          "since": "0.1.0",
+          "default": "None"
+        }
+      ],
+      "extra": [
+      ]
+    },
+    {
+      "name": "TextMatch",
+      "namespace": "gigahorse.github.response",
+      "type": "record",
+      "target": "Scala",
+      "fields": [
+        {
+          "name": "object_url",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "object_type",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "property",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "fragment",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "matches",
+          "type": "gigahorse.github.response.SearchTerm*",
+          "since": "0.0.0"
+        }
+      ],
+      "extra": [
+      ]
+    },
+    {
+      "name": "TextMatches",
+      "namespace": "gigahorse.github.response",
+      "type": "record",
+      "target": "Scala",
+      "fields": [
+        {
+          "name": "text_matches",
+          "type": "gigahorse.github.response.TextMatch*",
+          "since": "0.0.0"
+        }
+      ],
+      "extra": [
+      ]
+    },
+    {
+      "name": "SearchTerm",
+      "namespace": "gigahorse.github.response",
+      "type": "record",
+      "target": "Scala",
+      "fields": [
+        {
+          "name": "text",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "indices",
+          "type": "int*",
+          "since": "0.0.0"
+        }
+      ],
+      "extra": [
+      ]
+    },
     {
       "name": "User",
       "namespace": "gigahorse.github.response",

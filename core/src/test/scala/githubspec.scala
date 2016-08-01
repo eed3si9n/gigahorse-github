@@ -57,11 +57,13 @@ class GithubSpec extends AsyncFlatSpec with Matchers {
       }
     }
 
-  // "Github.user.repos" should "return a json object that can be parsed using `asRepos`" in
-  //   withHttp { http =>
-  //     val repos = http(client(gh.user.repos.asc) > as.repatch.github.response.Repos)
-  //     repos().head.full_name must_!= "foo"
-  //   }
+  "Github.user.repos" should "return a json object that can be parsed using `asRepos`" in
+    withHttp { http =>
+      val f = http.run(client(Github.user.repos.asc), Github.asRepos)
+      f map { repos =>
+        assert(repos.head.full_name != "foo")
+      }
+    }
 
   "Github.repo(:owner, :repo).git_refs" should "return a json array that can be parsed using asGitRefs" in
     withHttp { http =>
@@ -215,82 +217,71 @@ class GithubSpec extends AsyncFlatSpec with Matchers {
       }
     }
 
-/*s2"""
+  "Github.user" should "return a json object that can be parsed using asUser" in
+    withHttp { http =>
+      val f = http.run(client(Github.user), Github.asUser)
+      f map { usr =>
+        assert(usr.login != "foo")
+      }
+    }
 
-  `Github.user` should
-    return a json object that can be parsed using `User`                      ${user1}
+  "Github.user(:user)" should "return a json object that can be parsed using asUser" in
+    withHttp { http =>
+      val f = http.run(client(Github.user("eed3si9n")), Github.asUser)
+      f map { usr =>
+        assert(usr.login == "eed3si9n")
+      }
+    }
 
-  `Github.user(:user)` should
-    return a json object that can be parsed using `User`                      ${user2}
+  "Github.user(:user).orgs" should "return a json object that can be parsed using asOrgs" in
+    withHttp { http =>
+      val f = http.run(client(Github.user("eed3si9n").orgs), Github.asOrgs)
+      f map { orgs =>
+        assert(orgs.head.login == "scala")
+      }
+    }
 
-  `Github.user.orgs` should
-    return a json object that can be parsed using `Orgs`                      ${orgs1}
+  "Github.search.repos(:q)" should "return a json object that can be parsed using asReposSearch" in
+    withHttp { http =>
+      val f = http.run(client(Github.search.repos("gigahorse language:scala")), Github.asReposSearch)
+      f map { repos =>
+        assert(repos.head.full_name == "eed3si9n/gigahorse")
+      }
+    }
 
-  `Github.user(:user).orgs` should
-    return a json object that can be parsed using `Orgs`                      ${orgs2}
+  "Github.search.code(:q)" should "return a json object that can be parsed using asCodeSearch"
+    withHttp { http =>
+      val f = http.run(client(Github.search.code("\"abstract class Gigahorse\" in:file repo:eed3si9n/gigahorse")),
+        Github.asCodeSearch)
+      f map { code =>
+        assert(code.head.path == "core/src/main/scala/gigahorse/Gigahorse.scala")
+      }
+    }
 
-  `Github.search.repos("reboot language:scala")` should
-    return a json object that can be parsed using `ReposSearch`               ${search1}
+  it should "return a json object that can be parsed using asTextMatches given the right HTTP header" in
+    withHttp { http =>
+      val f = http.run(client.text_match(Github.search.code("\"abstract class Gigahorse\" in:file repo:eed3si9n/gigahorse")),
+        Github.asTextMatches)
+      f map { code =>
+        assert(code.head.text_matches.head.fragment contains "abstract class Gigahorse")
+      }
+    }
 
-  `Github.search.code("case class Req in:file repo:dispatch/reboot")` should
-    return a json object that can be parsed using `CodeSearch`                ${search2}
-    return a json object that can be parsed using `TextMatches` given
-    HTTP header Accept: application/vnd.github.v3.text-match+json             ${search3}
+  "Github.search.issues(:q)" should "return a json object that can be parsed using asIssuesSearch" in
+    withHttp { http =>
+      val f = http.run(client(Github.search.issues("sbt-datatype 0.2.3 repo:eed3si9n/gigahorse")), Github.asIssuesSearch)
+      f map { iss =>
+        assert(iss.head.number == Some(1))
+      }
+    }
 
-  `Github.search.issues("oauth client access repo:eed3si9n/repatch-github")` should
-    return a json object that can be parsed using `IssuesSearch`              ${search4}
-
-  `Github.search.users("eed3si9n")` should
-    return a json object that can be parsed using `UsersSearch`               ${search5}
-                                                                              """
-*/
-
-  // def user1 = {
-  //   val usr = http(client(gh.user) > as.repatch.github.response.User)
-  //   usr().login must_!= "foo" 
-  // }
-
-  // def user2 = {
-  //   val usr = http(client(gh.user("eed3si9n")) > as.repatch.github.response.User)
-  //   usr().login must_== "eed3si9n"
-  // }
-
-  // def orgs1 = {
-  //   val orgs = http(client(gh.user.orgs) > as.repatch.github.response.Orgs)
-  //   orgs().head.login must_!= "foo"
-  // }
-
-  // def orgs2 = {
-  //   val orgs = http(client(gh.user("eed3si9n").orgs) > as.repatch.github.response.Orgs)
-  //   orgs().head.login must_== "ny-scala"
-  // }
-
-  // def search1 = {
-  //   val repos = http(client(gh.search.repos("reboot language:scala")) > as.repatch.github.response.ReposSearch)
-  //   repos().head.full_name must_== "dispatch/reboot"
-  // }
-
-  // def search2 = {
-  //   val code = http(client(gh.search.code("\"case class Req\" in:file repo:dispatch/reboot")) > 
-  //     as.repatch.github.response.CodeSearch)
-  //   code().head.path must_== "core/src/main/scala/requests.scala"
-  // }
-
-  // def search3 = {
-  //   val code = http(client.text_match(gh.search.code("\"case class Req\" in:file repo:dispatch/reboot")) >
-  //     as.repatch.github.response.TextMatches)
-  //   code().head.text_matches.head.fragment must contain("case class Req") 
-  // }
-
-  // def search4 = {
-  //   val iss = http(client(gh.search.issues("oauth client access repo:eed3si9n/repatch-github")) > as.repatch.github.response.IssuesSearch)
-  //   iss().head.number_opt must_== Some(1)
-  // }
-
-  // def search5 = {
-  //   val users = http(client(gh.search.users("eed3si9n")) > as.repatch.github.response.UsersSearch)
-  //   users().head.login must_== "eed3si9n"
-  // }
+  "Github.search.users(:q)" should "return a json object that can be parsed using asUsersSearch" in
+    withHttp { http =>
+      val f = http.run(client(Github.search.users("eed3si9n")), Github.asUsersSearch)
+      f map { users =>
+        assert(users.head.login == "eed3si9n")
+      }
+    }
 
   // custom loan pattern
   def withHttp(testCode: gigahorse.HttpClient => Future[Assertion]): Future[Assertion] =

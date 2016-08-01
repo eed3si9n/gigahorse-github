@@ -2,7 +2,7 @@ package gigahorse.github
 
 import gigahorse._
 import github.{ response => res }
-import request.{ Repos, Issues, UrlBuilder }
+import request.{ Repos, Issues, UrlBuilder, Users, Search }
 import sjsonnew.support.scalajson.unsafe.Converter
 import scala.json.ast.unsafe.JValue
 import java.nio.ByteBuffer
@@ -19,10 +19,10 @@ object Github {
 
   def repo(owner: String, name: String): Repos = Repos(owner, name)
   def issues: Issues = Issues(Map())
-//   def user: Users = Users(None)
-//   def user(name: String): Users = Users(Some(name))
+  def user: Users = Users(None)
+  def user(name: String): Users = Users(Some(name))
   def url(u: String): UrlBuilder = UrlBuilder(u)
-//   def search: Search = Search()
+  def search: Search = Search()
 
   type IssueState = gigahorse.github.response.IssueState
   val IssueState = gigahorse.github.response.IssueState
@@ -38,6 +38,8 @@ object Github {
     asJson andThen Converter.fromJsonUnsafe[res.Authorization]
   val asRepo: Response => res.Repo =
     asJson andThen Converter.fromJsonUnsafe[res.Repo]
+  val asRepos: Response => res.Paged[res.Repo] =
+    res.Paged.parseArray(Converter.fromJsonUnsafe[res.Repo])
   val asGitRef: Response => res.GitRef =
     asJson andThen Converter.fromJsonUnsafe[res.GitRef]
   val asGitRefs: Response => res.Paged[res.GitRef] =
@@ -50,27 +52,20 @@ object Github {
     asJson andThen Converter.fromJsonUnsafe[res.GitBlob]
   val asIssues: Response => res.Paged[res.Issue] =
     res.Paged.parseArray(Converter.fromJsonUnsafe[res.Issue])
+  val asUser: Response => res.User =
+    asJson andThen Converter.fromJsonUnsafe[res.User]
+  val asUsers: Response => res.Paged[res.User] =
+    res.Paged.parseArray(Converter.fromJsonUnsafe[res.User])
+  val asOrgs: Response => res.Paged[res.User] = asUsers
+
+  val asReposSearch: Response => res.Paged[res.Repo] =
+    res.Paged.parseSearchResult(Converter.fromJsonUnsafe[res.Repo])
+  val asCodeSearch: Response => res.Paged[res.BlobRef] =
+    res.Paged.parseSearchResult(Converter.fromJsonUnsafe[res.BlobRef])
+  val asIssuesSearch: Response => res.Paged[res.Issue] =
+    res.Paged.parseSearchResult(Converter.fromJsonUnsafe[res.Issue])
+  val asUsersSearch: Response => res.Paged[res.User] =
+    res.Paged.parseSearchResult(Converter.fromJsonUnsafe[res.User])
+  val asTextMatches: Response => res.Paged[res.TextMatches] =
+    res.Paged.parseSearchResult(Converter.fromJsonUnsafe[res.TextMatches])
 }
-
-// package object response {
-//   import com.ning.http.client.Response
-//   import repatch.github.{response => res}
-//   import dispatch.as.json4s.Json
-
-//   val Repos:        Response => res.Paged[res.Repo] = res.Paged.parseArray(res.Repo.apply)
-//   val GitRef:       Response => res.GitRef = Json andThen res.GitRef.apply
-//   val GitRefs:      Response => res.Paged[res.GitRef] = res.Paged.parseArray(res.GitRef.apply)
-//   val GitCommit:    Response => res.GitCommit = Json andThen res.GitCommit.apply
-//   val GitTrees:     Response => res.GitTrees = Json andThen res.GitTrees.apply
-//   val GitBlob:      Response => res.GitBlob = Json andThen res.GitBlob.apply
-//   val Issues:       Response => res.Paged[res.Issue] = res.Paged.parseArray(res.Issue.apply)
-//   val User:         Response => res.User = Json andThen res.User.apply
-//   val Users:        Response => res.Paged[res.User] = res.Paged.parseArray(res.User.apply)
-//   val Orgs:         Response => res.Paged[res.User] = Users
-
-//   val ReposSearch:  Response => res.Paged[res.Repo] = res.Paged.parseSearchResult(res.Repo.apply)
-//   val CodeSearch:   Response => res.Paged[res.BlobRef] = res.Paged.parseSearchResult(res.BlobRef.apply)
-//   val IssuesSearch: Response => res.Paged[res.Issue] = res.Paged.parseSearchResult(res.Issue.apply)
-//   val UsersSearch:  Response => res.Paged[res.User] = res.Paged.parseSearchResult(res.User.apply)
-//   val TextMatches:  Response => res.Paged[res.TextMatches] = res.Paged.parseSearchResult(res.TextMatches.apply)
-// }

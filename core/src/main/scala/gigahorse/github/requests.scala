@@ -3,18 +3,11 @@ package request
 
 import gigahorse._
 import gigahorse.github.{response => res}
-// import org.json4s._
-// import repatch.github.{response => res}
 import java.util.Calendar
-// import collection.immutable.Map
 
 abstract class RequestBuilder {
   protected val baseUrl = "https://api.github.com"
   def build: Request
-}
-
-object RequestBuilder {
-
 }
 
 /** represents a github repository from the request-side
@@ -110,71 +103,78 @@ case class ReposIssues(repo: Repos, params: Map[String, String] = Map()) extends
       addQueryString(params.toList: _*)
 }
 
-// /** represents users request.
-//  * @see https://developer.github.com/v3/users/
-//  */
-// case class Users(name: Option[String]) extends Method {
-//   def complete = { req: Req =>
-//     name match {
-//       case Some(n) => req / "users" / n
-//       case None    => req / "user"
-//     }
-//   }
+/** represents users request.
+ * @see https://developer.github.com/v3/users/
+ */
+case class Users(name: Option[String]) extends RequestBuilder {
+  def build: Request = Gigahorse.url(
+    name match {
+      case Some(n) => s"$baseUrl/users/$n"
+      case None    => s"$baseUrl/user"
+    })
 
-//   def repos: UsersRepos = UsersRepos(this)
-//   def orgs: UsersOrgs = UsersOrgs(this)
-// }
+  def repos: UsersRepos = UsersRepos(this)
+  def orgs: UsersOrgs = UsersOrgs(this)
+}
 
-// case class UsersRepos(user: Users, params: Map[String, String] = Map()) extends Method
-//     with Param[UsersRepos] with SortParam[UsersRepos] with PageParam[UsersRepos] {
-//   def complete = user.complete(_) / "repos" <<? params
-//   def param[A: Show](key: String)(value: A): UsersRepos =
-//     copy(params = params + (key -> implicitly[Show[A]].shows(value)))
-// }
+case class UsersRepos(user: Users, params: Map[String, String] = Map()) extends RequestBuilder
+    with Param[UsersRepos] with SortParam[UsersRepos] with PageParam[UsersRepos] {
+  def param[A: Show](key: String)(value: A): UsersRepos =
+    copy(params = params + (key -> implicitly[Show[A]].shows(value)))
+  def build: Request =
+    Gigahorse.url(s"${user.build.url}/repos").
+      addQueryString(params.toList: _*)
+}
 
-// case class UsersOrgs(user: Users, params: Map[String, String] = Map()) extends Method
-//     with Param[UsersOrgs] with SortParam[UsersOrgs] with PageParam[UsersOrgs] {
-//   def complete = user.complete(_) / "orgs" <<? params
-//   def param[A: Show](key: String)(value: A): UsersOrgs =
-//     copy(params = params + (key -> implicitly[Show[A]].shows(value)))
-// }
+case class UsersOrgs(user: Users, params: Map[String, String] = Map()) extends RequestBuilder
+    with Param[UsersOrgs] with SortParam[UsersOrgs] with PageParam[UsersOrgs] {
+  def param[A: Show](key: String)(value: A): UsersOrgs =
+    copy(params = params + (key -> implicitly[Show[A]].shows(value)))
+  def build: Request =
+    Gigahorse.url(s"${user.build.url}/orgs").
+      addQueryString(params.toList: _*)
+}
 
-// /** @see https://developer.github.com/v3/search/
-//  */
-// case class Search() {
-//   def repos(q: String): SearchRepos = SearchRepos(q)
-//   def code(q: String): SearchCode = SearchCode(q)
-//   def issues(q: String): SearchIssues = SearchIssues(q)
-//   def users(q: String): SearchUsers = SearchUsers(q)
-// }
+/** @see https://developer.github.com/v3/search/
+ */
+case class Search() {
+  def repos(q: String): SearchRepos = SearchRepos(q)
+  def code(q: String): SearchCode = SearchCode(q)
+  def issues(q: String): SearchIssues = SearchIssues(q)
+  def users(q: String): SearchUsers = SearchUsers(q)
+}
 
-// case class SearchRepos(q: String, params: Map[String, String] = Map()) extends Method
-//     with Param[SearchRepos] with SortParam[SearchRepos] with PageParam[SearchRepos] {
-//   def complete = _ / "search" / "repositories" <<? (params + ("q" -> q))
-//   def param[A: Show](key: String)(value: A): SearchRepos =
-//     copy(params = params + (key -> implicitly[Show[A]].shows(value)))
-// }
+case class SearchRepos(q: String, params: Map[String, String] = Map()) extends RequestBuilder
+    with Param[SearchRepos] with SortParam[SearchRepos] with PageParam[SearchRepos] {
+  def param[A: Show](key: String)(value: A): SearchRepos =
+    copy(params = params + (key -> implicitly[Show[A]].shows(value)))
+  def build: Request = Gigahorse.url(s"$baseUrl/search/repositories").
+    addQueryString(("q" -> q) :: params.toList: _*)
+}
 
-// case class SearchCode(q: String, params: Map[String, String] = Map()) extends Method
-//     with Param[SearchCode] with SortParam[SearchCode] with PageParam[SearchCode] {
-//   def complete = _ / "search" / "code" <<? (params + ("q" -> q))
-//   def param[A: Show](key: String)(value: A): SearchCode =
-//     copy(params = params + (key -> implicitly[Show[A]].shows(value)))
-// }
+case class SearchCode(q: String, params: Map[String, String] = Map()) extends RequestBuilder
+    with Param[SearchCode] with SortParam[SearchCode] with PageParam[SearchCode] {
+  def param[A: Show](key: String)(value: A): SearchCode =
+    copy(params = params + (key -> implicitly[Show[A]].shows(value)))
+  def build: Request = Gigahorse.url(s"$baseUrl/search/code").
+    addQueryString(("q" -> q) :: params.toList: _*)
+}
 
-// case class SearchIssues(q: String, params: Map[String, String] = Map()) extends Method
-//     with Param[SearchIssues] with SortParam[SearchIssues] with PageParam[SearchIssues] {
-//   def complete = _ / "search" / "issues" <<? (params + ("q" -> q))
-//   def param[A: Show](key: String)(value: A): SearchIssues =
-//     copy(params = params + (key -> implicitly[Show[A]].shows(value)))
-// }
+case class SearchIssues(q: String, params: Map[String, String] = Map()) extends RequestBuilder
+    with Param[SearchIssues] with SortParam[SearchIssues] with PageParam[SearchIssues] {
+  def param[A: Show](key: String)(value: A): SearchIssues =
+    copy(params = params + (key -> implicitly[Show[A]].shows(value)))
+  def build: Request = Gigahorse.url(s"$baseUrl/search/issues").
+    addQueryString(("q" -> q) :: params.toList: _*)
+}
 
-// case class SearchUsers(q: String, params: Map[String, String] = Map()) extends Method
-//     with Param[SearchUsers] with SortParam[SearchUsers] with PageParam[SearchUsers] {
-//   def complete = _ / "search" / "users" <<? (params + ("q" -> q))
-//   def param[A: Show](key: String)(value: A): SearchUsers =
-//     copy(params = params + (key -> implicitly[Show[A]].shows(value)))
-// }
+case class SearchUsers(q: String, params: Map[String, String] = Map()) extends RequestBuilder
+    with Param[SearchUsers] with SortParam[SearchUsers] with PageParam[SearchUsers] {
+  def param[A: Show](key: String)(value: A): SearchUsers =
+    copy(params = params + (key -> implicitly[Show[A]].shows(value)))
+  def build: Request = Gigahorse.url(s"$baseUrl/search/users").
+    addQueryString(("q" -> q) :: params.toList: _*)
+}
 
 /** represents raw URL. used for navigating to the next page in paginated results.
  */

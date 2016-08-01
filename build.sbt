@@ -38,6 +38,7 @@ lazy val core = (project in file("core")).
                                     |import scala.concurrent._
                                     |import scala.concurrent.duration._
                                     |val client = Github.localConfigClient""".stripMargin,
+    datatypeCodecParents in (Compile, generateDatatypes) += "sjsonnew.BasicJsonProtocol",
     sourceManaged in (Compile, generateDatatypes) := (sourceDirectory in Compile).value / "scala",
     // You need this otherwise you get X is already defined as class.
     sources in Compile := (sources in Compile).value.toList.distinct
