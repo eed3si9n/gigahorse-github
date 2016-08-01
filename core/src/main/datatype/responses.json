@@ -335,6 +335,72 @@
       "extra": [
       ]
     },
+    {
+      "name": "GitTrees",
+      "namespace": "gigahorse.github.response",
+      "type": "record",
+      "target": "Scala",
+      "fields": [
+        {
+          "name": "url",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "sha",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "tree",
+          "type": "gigahorse.github.response.GitTree*",
+          "since": "0.0.0"
+        }
+      ],
+      "extra": [
+      ]
+    },
+    {
+      "name": "GitTree",
+      "namespace": "gigahorse.github.response",
+      "type": "record",
+      "target": "Scala",
+      "fields": [
+        {
+          "name": "url",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "sha",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "path",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "mode",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "type",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "size",
+          "type": "long?",
+          "since": "0.1.0",
+          "default": "None"
+        }
+      ],
+      "extra": [
+      ]
+    },
 
     {
       "name": "User",

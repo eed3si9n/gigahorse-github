@@ -24,8 +24,8 @@ case class Repos(owner: String, name: String) extends RequestBuilder {
   def git_refs = GitRefs(this, None)
   def git_commit(ref: res.GitRef): GitCommits = GitCommits(this, ref.`object`.sha)
   def git_commit(sha: String): GitCommits = GitCommits(this, sha)
-  // def git_trees(commit: res.GitCommit): GitTrees = GitTrees(this, commit.tree.sha)
-  // def git_trees(sha: String): GitTrees = GitTrees(this, sha)
+  def git_trees(commit: res.GitCommit): GitTrees = GitTrees(this, commit.tree.sha)
+  def git_trees(sha: String): GitTrees = GitTrees(this, sha)
   // def git_blob(sha: String): GitBlobs = GitBlobs(this, sha, MediaType.default)
   // def issues: ReposIssues = ReposIssues(this, Map())
 
@@ -59,17 +59,18 @@ case class GitCommits(repo: Repos, sha: String) extends RequestBuilder {
     Gigahorse.url(s"${repo.build.url}/git/commits/$sha")
 }
 
-// /** represents git tree request.
-//  * @see http://developer.github.com/v3/git/trees/
-//  */
-// case class GitTrees(repo: Repos, sha: String, params: Map[String, String] = Map()) extends Method with Param[GitTrees] {
-//   def param[A: Show](key: String)(value: A): GitTrees =
-//     copy(params = params + (key -> implicitly[Show[A]].shows(value)))
-  
-//   val recursive = 'recursive.?[Int]
-  
-//   def complete = repo.complete(_) / "git" / "trees" / sha <<? params
-// }
+/** represents git tree request.
+ * @see http://developer.github.com/v3/git/trees/
+ */
+case class GitTrees(repo: Repos, sha: String, params: Map[String, String] = Map()) extends RequestBuilder with Param[GitTrees] {
+  def param[A: Show](key: String)(value: A): GitTrees =
+    copy(params = params + (key -> implicitly[Show[A]].shows(value)))
+  val recursive = 'recursive.?[Long]
+
+  def build: Request =
+    Gigahorse.url(s"${repo.build.url}/git/trees/$sha").
+      addQueryString(params.toList: _*)
+}
 
 // /** represents git blob request.
 //  * @see http://developer.github.com/v3/git/blobs/
@@ -193,10 +194,10 @@ case class GitCommits(repo: Repos, sha: String) extends RequestBuilder {
 //   def desc: R = direction("desc") 
 // }
 
-// trait Param[R] {
-//   val params: Map[String, String]
-//   def param[A: Show](key: String)(value: A): R
-//   implicit class SymOp(sym: Symbol) {
-//     def ?[A: Show]: A => R = param(sym.name)_
-//   }
-// }
+trait Param[R] {
+  val params: Map[String, String]
+  def param[A: Show](key: String)(value: A): R
+  implicit class SymOp(sym: Symbol) {
+    def ?[A: Show]: A => R = param(sym.name)_
+  }
+}

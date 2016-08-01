@@ -33,10 +33,14 @@ case class BasicAuthClient(user: String, pass: String, mimes: List[MediaType]) e
 }
 
 object LocalConfigClient {
-  lazy val token: Option[String] = gitConfig("github.token")
-  def apply(): LocalConfigClient = LocalConfigClient(MediaType.default)
-  def apply(mimes: List[MediaType]): LocalConfigClient =
-    LocalConfigClient(OAuthClient(token getOrElse sys.error("Token was not found in local config!"), mimes))
+  import scala.collection.mutable
+  private val cache: mutable.Map[String, String] = mutable.Map.empty
+
+  def apply(): LocalConfigClient = LocalConfigClient("github.token", MediaType.default)
+  def apply(key: String): LocalConfigClient = LocalConfigClient(key, MediaType.default)
+  def apply(key: String, mimes: List[MediaType]): LocalConfigClient =
+    LocalConfigClient(OAuthClient(cache.getOrElseUpdate(key,
+      gitConfig(key) getOrElse sys.error("Token was not found in local config!")), mimes))
 
   // https://github.com/defunkt/gist/blob/master/lib/gist.rb#L237
   def gitConfig(key: String): Option[String] =

@@ -12,6 +12,7 @@ object Show {
   }
   implicit val stringShow  = showA[String]
   implicit val intShow     = showA[Int]
+  implicit val longShow    = showA[Long]
   implicit val bigIntShow  = showA[BigInt]
   implicit val booleanShow = showA[Boolean]
   implicit val doubleShow  = showA[Double]

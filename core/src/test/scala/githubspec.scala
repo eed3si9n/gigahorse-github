@@ -9,13 +9,13 @@ import gigahorse.github.Github
 import scala.json.ast.unsafe._
 import sjsonnew.support.scalajson.unsafe.CompactPrinter
 
-class GithubSpec extends AsyncFlatSpec {
-  lazy val client = Github.localConfigClient
+class GithubSpec extends AsyncFlatSpec with Matchers {
+  lazy val client = Github.localConfigClient("gigahorse.token")
   val user = "eed3si9n"
   val name = "gigahorse"
-  val tree_sha = "b1193d20d761654b7fc35a48cd64b53aedc7a697"
+  val tree_sha = "d19f416669ea6a2ffc22ab91bed8a9feff48e778"
   val commit_sha = "d7b8bb43d003e58f55af7b3592e7ce1fb986d0f3"
-  val blob_sha = "3baebe52555bc73ad1c9a94261c4552fb8d771cd"
+  val blob_sha = "ac28ec8ee30e89ae807f3ef52f471ffc68783b28"
   "Github.repo(:owner, :repo)" should "return a json object that can be parsed manually" in
     withHttp { http =>
       // `client(repo(user, name))` constructs a request to
@@ -96,26 +96,57 @@ class GithubSpec extends AsyncFlatSpec {
       }
     }
 
-  "Github.repo(:owner, :repo).git_commit(git_ref)" should "return a commit json object for the given GitRef" in
+  "Github.repo(:owner, :repo).git_commit(git_ref)" should "return a commit json object for the given asGitRef" in
     withHttp { http =>
       for {
         // this returns a GitRef case class
         master <- http.run(client(Github.repo(user, name).git_refs.heads("0.1.x")), Github.asGitRef)
         // this returns a GitCommit case class
         commit <- http.run(client(Github.repo(user, name).git_commit(master)), Github.asGitCommit)
-      } yield assert(commit.sha == master.`object`.sha)
+      } yield {
+        // println(commit)
+        assert(commit.sha == master.`object`.sha)
+      }
+    }
+
+  "Github.repo(:owner, :repo).git_trees(:sha)" should "return a json object that can be parsed using asGitTrees" in
+    withHttp { http =>
+      // `client(repos(user, name).git_trees(tree_sha))` constructs a request to
+      // https://api.github.com/repos/dispatch/reboot/git/trees/563c7dcea4bbb71e49313e92c01337a0a4b7ce72
+      // Returned json object can then be parsed using `GitTrees`,
+      // which returns a seqence of GitTree case class
+      val f = http.run(client(Github.repo(user, name).git_trees(tree_sha)), Github.asGitTrees)
+      import gigahorse.github.response.GitTree
+      f map { trees =>
+        println(trees.toString)
+        assert((trees.tree find { tree: GitTree => tree.path == ".gitignore" }).isDefined)
+      }
+    }
+
+  "Github.repo(:owner, :repo).git_trees(:sha).recursive(10))" should "return a json object that contains subdir blobs" in
+    withHttp { http =>
+      // this returns a sequence of GitTree case class
+      val f = http.run(client(Github.repo(user, name).git_trees(tree_sha).recursive(10)), Github.asGitTrees)
+      import gigahorse.github.response.GitTree
+      f map { trees =>
+        assert((trees.tree find { tree: GitTree => tree.path == "core/src/test/scala/gigahorsetest/HttpClientSpec.scala" }).isDefined)
+      }
+    }
+
+  "Github.repo(:owner, :repo).git_trees(commit)" should "return a tree json object for the given `GitCommit`" in
+    withHttp { http =>
+      for {
+        // this returns a GitCommit case class
+        commit <- http.run(client(Github.repo(user, name).git_commit(commit_sha)), Github.asGitCommit)
+        // this returns a seqence of GitTree case class
+        trees <- http.run(client(Github.repo(user, name).git_trees(commit)), Github.asGitTrees)
+      } yield {
+        import gigahorse.github.response.GitTree
+        assert((trees.tree find { tree: GitTree => tree.path == ".gitignore" }).isDefined)
+      }
     }
 
 /*s2"""
-
-  `Github.repo(:owner, :repo).git_trees(:sha)` should
-    return a json object that can be parsed using `GitTrees`                  ${trees1}
-
-  `Github.repo(:owner, :repo).git_trees(:sha).recursive(10)` should
-    return a json object that contains subdir blobs                           ${recursive1}
-
-  `Github.repo(:owner, :repo).git_trees(commit)` should
-    return a tree json object for the given `GitCommit`                       ${trees2}
 
   `Github.repo(:owner, :repo).git_blob(:sha)` should
     return a json object that can be parsed using `GitBlob`                   ${blob1}
@@ -163,33 +194,6 @@ class GithubSpec extends AsyncFlatSpec {
                                                                               """
 */
 
-  // def trees1 = {
-  //   // `client(repos(user, name).git_trees(tree_sha))` constructs a request to
-  //   // https://api.github.com/repos/dispatch/reboot/git/trees/563c7dcea4bbb71e49313e92c01337a0a4b7ce72
-  //   // Returned json object can then be parsed using `GitTrees`,
-  //   // which returns a seqence of GitTree case class
-  //   val trees = http(client(gh.repo(user, name).git_trees(tree_sha)) > as.repatch.github.response.GitTrees)
-  //   import repatch.github.response.GitTree
-  //   trees().tree must contain { tree: GitTree => tree.path must be_==(".gitignore") }
-  // }
-
-  // def recursive1 = {
-  //   // this returns a sequence of GitTree case class
-  //   val trees = http(client(gh.repo(user, name).git_trees(tree_sha).recursive(10)) > as.repatch.github.response.GitTrees)
-  //   import repatch.github.response.GitTree
-  //   trees().tree must contain { tree: GitTree => tree.path must be_==("core/src/main/scala/retry/retries.scala") }
-  // }
-  
-  // def trees2 = {
-  //   // this returns a GitCommit case class
-  //   val commit = http(client(gh.repo(user, name).git_commit(commit_sha)) > as.repatch.github.response.GitCommit)    
-    
-  //   // this returns a seqence of GitTree case class
-  //   val trees = http(client(gh.repo(user, name).git_trees(commit())) > as.repatch.github.response.GitTrees)
-  //   import repatch.github.response.GitTree
-  //   trees().tree must contain { tree: GitTree => tree.path must be_==(".gitignore") }
-  // }
-    
   // def blob1 = {
   //   // `client(repos(user, name).git_blob(blob_sha))` constructs a request to
   //   // https://api.github.com/repos/dispatch/reboot/git/blobs/3baebe52555bc73ad1c9a94261c4552fb8d771cd

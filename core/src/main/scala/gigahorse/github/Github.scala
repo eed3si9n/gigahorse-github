@@ -14,7 +14,8 @@ object Github {
   def basicAuthClient(user: String, pass: String, mimes: List[MediaType]) =
     BasicAuthClient(user, pass, mimes)
   def localConfigClient: LocalConfigClient = LocalConfigClient()
-  def localConfigClient(mimes: List[MediaType]) = LocalConfigClient(mimes)
+  def localConfigClient(key: String) = LocalConfigClient(key)
+  def localConfigClient(key: String, mimes: List[MediaType]) = LocalConfigClient(key, mimes)
 
   def repo(owner: String, name: String): Repos = Repos(owner, name)
 //   def issues: Issues = Issues(Map())
@@ -42,6 +43,8 @@ object Github {
     res.Paged.parseArray(Converter.fromJsonUnsafe[res.GitRef])
   val asGitCommit: Response => res.GitCommit =
     asJson andThen Converter.fromJsonUnsafe[res.GitCommit]
+  val asGitTrees: Response => res.GitTrees =
+    asJson andThen Converter.fromJsonUnsafe[res.GitTrees]
 }
 
 // package object response {
