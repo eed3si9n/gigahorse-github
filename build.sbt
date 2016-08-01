@@ -1,4 +1,4 @@
-lazy val baseVersion = "0.1.0-SNAPSHOT"
+lazy val baseVersion = "0.1.0"
 lazy val gigahorseVersion = "0.1.1"
 lazy val gigahorseCore = "com.eed3si9n" %% "gigahorse-core" % gigahorseVersion
 lazy val scalatest = "org.scalatest" %% "scalatest" % "3.0.0-RC4"
@@ -7,16 +7,22 @@ lazy val sjsonNewScalaJson = "com.eed3si9n" %%  "sjson-new-scalajson" % "0.4.2"
 lazy val sjsonNewCore = "com.eed3si9n" %%  "sjson-new-core" % "0.4.2"
 
 lazy val commonSettings: Seq[Def.Setting[_]] = Seq(
-  version := s"gigahorse${gigahorseVersion}_${baseVersion}",
-  organization := "com.eed3si9n",
-  scalaVersion := "2.11.8",
-  crossScalaVersions := Seq("2.11.8", "2.10.6"),
-  fork in run := true
+  fork in run := true,
+  publishTo := {
+    val nexus = "https://oss.sonatype.org/"
+    if (isSnapshot.value) Some("snapshots" at nexus + "content/repositories/snapshots")
+    else Some("releases" at nexus + "service/local/staging/deploy/maven2")
+  }
 )
 
 lazy val root = (project in file(".")).
-  settings(commonSettings: _*).
   settings(
+    inThisBuild(List(
+      version := s"gigahorse${gigahorseVersion}_${baseVersion}",
+      organization := "com.eed3si9n",
+      scalaVersion := "2.11.8",
+      crossScalaVersions := Seq("2.11.8", "2.10.6")
+    )),
     name := "gigahorse-github-root",
     publish := (),
     publishLocal := ()
