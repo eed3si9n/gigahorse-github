@@ -9,8 +9,13 @@ import java.nio.ByteBuffer
 
 object Github {
   import res.CustomJsonProtocol._
-  // val hostName = "api.github.com"
+
   def noAuthClient(mimes: List[MediaType]) = NoAuthClient(mimes)
+  def basicAuthClient(user: String, pass: String, mimes: List[MediaType]) =
+    BasicAuthClient(user, pass, mimes)
+  def localConfigClient: LocalConfigClient = LocalConfigClient()
+  def localConfigClient(mimes: List[MediaType]) = LocalConfigClient(mimes)
+
   def repo(owner: String, name: String): Repos = Repos(owner, name)
 //   def issues: Issues = Issues(Map())
 //   def user: Users = Users(None)
@@ -27,6 +32,8 @@ object Github {
       val buffer = ByteBuffer.wrap(r.bodyAsBytes)
       Parser.parseFromByteBuffer(buffer).get
     }
+  val asAuthorization: Response => res.Authorization =
+    asJson andThen Converter.fromJsonUnsafe[res.Authorization]
   val asRepo: Response => res.Repo =
     asJson andThen Converter.fromJsonUnsafe[res.Repo]
   val asGitRef: Response => res.GitRef =

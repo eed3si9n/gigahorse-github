@@ -49,7 +49,7 @@ object MediaType {
    * application/json
    * application/vnd.github.v3+json
    */
-  val default: Seq[MediaType] = Seq(json, v3.format_json)
+  val default: List[MediaType] = List(json, v3.format_json)
   lazy val json: MediaType = StringMediaType("application/json")
   lazy val v3 = githubMediaType.version("v3")
   lazy val githubMediaType = GithubMediaType(None, None, None)

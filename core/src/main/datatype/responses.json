@@ -137,6 +137,70 @@
       ]
     },
     {
+      "name": "Authorization",
+      "namespace": "gigahorse.github.response",
+      "type": "record",
+      "target": "Scala",
+      "fields": [
+        {
+          "name": "url",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "id",
+          "type": "long",
+          "since": "0.0.0"
+        },
+        {
+          "name": "scopes",
+          "type": "String*",
+          "since": "0.0.0"
+        },
+        {
+          "name": "token",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "token_last_eight",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "hashed_token",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "note",
+          "type": "String?",
+          "since": "0.1.0",
+          "default": "None"
+        },
+        {
+          "name": "note_url",
+          "type": "String?",
+          "since": "0.1.0",
+          "default": "None"
+        },
+        {
+          "name": "created_at",
+          "type": "java.util.Calendar?",
+          "since": "0.1.0",
+          "default": "None"
+        },
+        {
+          "name": "updated_at",
+          "type": "java.util.Calendar?",
+          "since": "0.1.0",
+          "default": "None"
+        }
+      ],
+      "extra": [
+      ]
+    },
+    {
       "name": "GitRef",
       "namespace": "gigahorse.github.response",
       "type": "record",

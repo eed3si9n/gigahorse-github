@@ -6,12 +6,11 @@ import scala.concurrent.duration._
 import java.io.File
 import gigahorse._
 import gigahorse.github.Github
-// import org.json4s._
 import scala.json.ast.unsafe._
 import sjsonnew.support.scalajson.unsafe.CompactPrinter
 
 class GithubSpec extends AsyncFlatSpec {
-  lazy val client = Github.noAuthClient(Nil) // gh.LocalConfigClient()
+  lazy val client = Github.localConfigClient
   val user = "eed3si9n"
   val name = "gigahorse"
   val tree_sha = "b1193d20d761654b7fc35a48cd64b53aedc7a697"
@@ -108,9 +107,6 @@ class GithubSpec extends AsyncFlatSpec {
     }
 
 /*s2"""
-
-  `Github.repo(:owner, :repo).git_commit(git_ref)` should
-    return a commit json object for the given `GitRef`                        ${commit3}
 
   `Github.repo(:owner, :repo).git_trees(:sha)` should
     return a json object that can be parsed using `GitTrees`                  ${trees1}
