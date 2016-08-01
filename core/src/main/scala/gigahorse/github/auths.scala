@@ -6,7 +6,6 @@ import collection.immutable.Map
 
 /** AbstractClient is a function to wrap API operations */
 abstract class AbstractClient {
- //  def host = :/(hostName).secure
   def mimes: List[MediaType]
   def httpHeaders(implicit ev: Show[MediaType]): Map[String, String] =
     if (mimes.isEmpty) Map()
@@ -17,8 +16,6 @@ abstract class AbstractClient {
   def apply(builder: request.RequestBuilder)(implicit ev: Show[MediaType]): Request = {
     val r = builder.build
     complete(r)
-    if (httpHeaders.isEmpty) r
-    else r
   }
 }
 
@@ -56,16 +53,20 @@ object LocalConfigClient {
 /** OAuthClient using local github config (https://github.com/blog/180-local-github-config).
  */
 case class LocalConfigClient(underlying: OAuthClient) extends AbstractClient with Mime[LocalConfigClient] {
+  override def httpHeaders(implicit ev: Show[MediaType]): Map[String, String] = underlying.httpHeaders
   override def complete(request: Request): Request = underlying.complete(request)
   override def apply(builder: request.RequestBuilder)(implicit ev: Show[MediaType]): Request = underlying.apply(builder)
   override def mimes: List[MediaType] = underlying.mimes
-  def mime(ms: List[MediaType]): LocalConfigClient = LocalConfigClient(underlying = OAuthClient(underlying.token, ms))
+  def mime(ms: List[MediaType]): LocalConfigClient =
+    LocalConfigClient(underlying = underlying.mime(ms))
 }
 
 case class OAuthClient(token: String, mimes: List[MediaType]) extends AbstractClient with Mime[OAuthClient] {
   override def httpHeaders(implicit ev: Show[MediaType]): Map[String, String] =
     super.httpHeaders ++ Map("Authorization" -> "bearer %s".format(token))
   def mime(ms: List[MediaType]): OAuthClient = copy(mimes = ms)
+  override def toString: String =
+    s"OAuthClient(****, $mimes)"
 }
 
 object OAuth {

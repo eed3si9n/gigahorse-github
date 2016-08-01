@@ -5,7 +5,7 @@ import scala.concurrent._
 import scala.concurrent.duration._
 import java.io.File
 import gigahorse._
-import gigahorse.github.Github
+import gigahorse.github.{ Github, response => res }
 import scala.json.ast.unsafe._
 import sjsonnew.support.scalajson.unsafe.CompactPrinter
 
@@ -16,6 +16,15 @@ class GithubSpec extends AsyncFlatSpec with Matchers {
   val tree_sha = "d19f416669ea6a2ffc22ab91bed8a9feff48e778"
   val commit_sha = "d7b8bb43d003e58f55af7b3592e7ce1fb986d0f3"
   val blob_sha = "ac28ec8ee30e89ae807f3ef52f471ffc68783b28"
+
+  "Github.repo(:owner, :repo)" should "return OK" in
+    withHttp { http =>
+      val f = http.process(client(Github.repo(user, name)))
+      f map { response =>
+        assert(response.status == 200, response.body)
+      }
+    }
+
   "Github.repo(:owner, :repo)" should "return a json object that can be parsed manually" in
     withHttp { http =>
       // `client(repo(user, name))` constructs a request to
@@ -118,7 +127,7 @@ class GithubSpec extends AsyncFlatSpec with Matchers {
       val f = http.run(client(Github.repo(user, name).git_trees(tree_sha)), Github.asGitTrees)
       import gigahorse.github.response.GitTree
       f map { trees =>
-        println(trees.toString)
+        // println(trees.toString)
         assert((trees.tree find { tree: GitTree => tree.path == ".gitignore" }).isDefined)
       }
     }
@@ -171,19 +180,42 @@ class GithubSpec extends AsyncFlatSpec with Matchers {
       }
     }
 
+  "Github.issues" should "return a json array that can be parsed using asIssues" in
+    withHttp { http =>
+      val f = http.run(client(Github.issues), Github.asIssues)
+      f map { iss =>
+        assert(iss.head.state == Some(Github.IssueState.open))
+      }
+    }
+
+  "Github.issues.labels(\"bug\").asc" should "return a json array that can be parsed using asIssues" in
+    withHttp { http =>
+      val f = http.run(client(Github.issues.state(Github.IssueState.closed).labels("bug").asc), Github.asIssues)
+      f map { iss =>
+        assert(iss.head.state == Some(Github.IssueState.closed))
+      }
+    }
+
+  "Github.repo(:owner, :repo).issues" should "return a json array that can be parsed using asIssues" in
+    withHttp { http =>
+      val f = http.run(client(Github.repo("sbt", "sbt").issues), Github.asIssues)
+      f map { iss =>
+        assert(iss.head.state == Some(Github.IssueState.open))
+      }
+    }
+
+  "Github.repo(:owner, :repo).issues.page(1).per_page(1)" should "return a json array with Link HTTP header for the next page" in
+    withHttp { http =>
+      for {
+        iss        <- http.run(client(Github.repo("sbt", "sbt").issues.page(1).per_page(1)), Github.asIssues)
+        Some(next) = iss.next_page
+        iss2       <- http.run(client(Github.url(next)), Github.asIssues)
+      } yield {
+        assert(iss2.head.state == Some(Github.IssueState.open))
+      }
+    }
+
 /*s2"""
-
-  `Github.issues` should
-    return a json array that can be parsed using `Issues`                     ${issues1}
-
-  `Github.issues.labels("bug").asc` should
-    return a json array that can be parsed using `Issues`                     ${issues2}
-
-  `Github.repo(:owner, :repo).issues` should
-    return a json array that can be parsed using `Issues`                     ${issues3}
-
-  `Github.repo(:owner, :repo).issues.page(1).per_page(1)` should
-    return a json array with Link HTTP header for the next page`              ${pagination1}
 
   `Github.user` should
     return a json object that can be parsed using `User`                      ${user1}
@@ -212,36 +244,6 @@ class GithubSpec extends AsyncFlatSpec with Matchers {
     return a json object that can be parsed using `UsersSearch`               ${search5}
                                                                               """
 */
-
-  // def issues1 = {
-  //   import repatch.github.response.IssueState._
-  //   val iss = http(client(gh.issues) > as.repatch.github.response.Issues)
-  //   iss().head.state_opt must_== Some(open)
-  // }
-
-  // def issues2 = {
-  //   import gh.IssueState._
-  //   val iss = http(client(gh.issues.state(closed).labels("bug").asc) > as.repatch.github.response.Issues)
-  //   iss().head.state_opt must_== Some(closed)
-  // }
-
-  // def issues3 = {
-  //   import repatch.github.response.IssueState._
-  //   val iss = http(client(gh.repo(user, name).issues) > as.repatch.github.response.Issues)
-  //   iss().head.state_opt must_== Some(open)
-  // }
-
-  // def pagination1 = {
-  //   import repatch.github.response.IssueState._
-  //   val iss = http(client(gh.repo(user, name).issues.page(1).per_page(1)) > as.repatch.github.response.Issues)
-  //   iss().next_page match {
-  //     case Some(next) =>
-  //       val iss2 = http(client(gh.url(next)) > as.repatch.github.response.Issues)
-  //       iss2().head.state_opt must_== Some(open)
-  //     case _ => sys.error("next page was not found")
-  //   }
-
-  // }
 
   // def user1 = {
   //   val usr = http(client(gh.user) > as.repatch.github.response.User)

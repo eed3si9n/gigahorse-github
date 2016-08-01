@@ -2,7 +2,7 @@ package gigahorse.github
 
 import gigahorse._
 import github.{ response => res }
-import request.Repos
+import request.{ Repos, Issues, UrlBuilder }
 import sjsonnew.support.scalajson.unsafe.Converter
 import scala.json.ast.unsafe.JValue
 import java.nio.ByteBuffer
@@ -18,14 +18,14 @@ object Github {
   def localConfigClient(key: String, mimes: List[MediaType]) = LocalConfigClient(key, mimes)
 
   def repo(owner: String, name: String): Repos = Repos(owner, name)
-//   def issues: Issues = Issues(Map())
+  def issues: Issues = Issues(Map())
 //   def user: Users = Users(None)
 //   def user(name: String): Users = Users(Some(name))
-//   def url(u: String): UrlMethod = UrlMethod(u)
+  def url(u: String): UrlBuilder = UrlBuilder(u)
 //   def search: Search = Search()
 
-//   type IssueState = repatch.github.response.IssueState
-//   val IssueState = repatch.github.response.IssueState
+  type IssueState = gigahorse.github.response.IssueState
+  val IssueState = gigahorse.github.response.IssueState
 
   val asString: Response => String = Gigahorse.asString
   val asJson: Response => JValue =
@@ -48,6 +48,8 @@ object Github {
     asJson andThen Converter.fromJsonUnsafe[res.GitTrees]
   val asGitBlob: Response => res.GitBlob =
     asJson andThen Converter.fromJsonUnsafe[res.GitBlob]
+  val asIssues: Response => res.Paged[res.Issue] =
+    res.Paged.parseArray(Converter.fromJsonUnsafe[res.Issue])
 }
 
 // package object response {

@@ -29,12 +29,15 @@ lazy val core = (project in file("core")).
   settings(
     name := "gigahorse-github",
     libraryDependencies ++= List(gigahorseCore, sjsonNewScalaJson, sjsonNewCore),
-    // libraryDependencies += "net.databinder.dispatch" %% "dispatch-json4s-native" % dispatchVersion,
     libraryDependencies += scalatest % Test,
-  //   initialCommands in console := """import dispatch._, Defaults._
-  //                                   |import repatch.github.{request => gh}
-  //                                   |val client = gh.LocalConfigClient()
-  //                                   |val http = new Http""".stripMargin
+    initialCommands in console := """import gigahorse._
+                                    |import gigahorse.github.{ Github, response => res }
+                                    |import scala.json.ast.unsafe._
+                                    |import sjsonnew.support.scalajson.unsafe.CompactPrinter
+                                    |import java.io.File
+                                    |import scala.concurrent._
+                                    |import scala.concurrent.duration._
+                                    |val client = Github.localConfigClient""".stripMargin,
     sourceManaged in (Compile, generateDatatypes) := (sourceDirectory in Compile).value / "scala",
     // You need this otherwise you get X is already defined as class.
     sources in Compile := (sources in Compile).value.toList.distinct

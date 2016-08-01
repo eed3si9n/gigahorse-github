@@ -5,7 +5,7 @@ import gigahorse._
 import gigahorse.github.{response => res}
 // import org.json4s._
 // import repatch.github.{response => res}
-// import java.util.Calendar
+import java.util.Calendar
 // import collection.immutable.Map
 
 abstract class RequestBuilder {
@@ -27,7 +27,7 @@ case class Repos(owner: String, name: String) extends RequestBuilder {
   def git_trees(commit: res.GitCommit): GitTrees = GitTrees(this, commit.tree.sha)
   def git_trees(sha: String): GitTrees = GitTrees(this, sha)
   def git_blob(sha: String): GitBlobs = GitBlobs(this, sha, MediaType.default)
-  // def issues: ReposIssues = ReposIssues(this, Map())
+  def issues: ReposIssues = ReposIssues(this, Map())
 
   def build: Request = Gigahorse.url(s"$baseUrl/repos/$owner/$name")
 }
@@ -75,36 +75,40 @@ case class GitTrees(repo: Repos, sha: String, params: Map[String, String] = Map(
 /** represents git blob request.
  * @see http://developer.github.com/v3/git/blobs/
  */
-case class GitBlobs(repo: Repos, sha: String, mimes: Seq[MediaType]) extends RequestBuilder {
+case class GitBlobs(repo: Repos, sha: String, mimes: List[MediaType]) extends RequestBuilder {
   def build: Request =
     Gigahorse.url(s"${repo.build.url}/git/blobs/$sha")
 }
 
-// /** represents issues request.
-//  * @see https://developer.github.com/v3/issues/
-//  */
-// case class Issues(params: Map[String, String] = Map()) extends Method with Param[Issues]
-//     with SortParam[Issues] with PageParam[Issues] {
-//   def complete = _ / "issues" <<? params
-//   def param[A: Show](key: String)(value: A): Issues =
-//     copy(params = params + (key -> implicitly[Show[A]].shows(value)))
-//   val filter  = 'filter.?[String]
-//   val state   = 'state.?[IssueState]
-//   def labels(xs: String*) = param("labels")(xs.toSeq)
-// }
+/** represents issues request.
+ * @see https://developer.github.com/v3/issues/
+ */
+case class Issues(params: Map[String, String] = Map()) extends RequestBuilder with Param[Issues]
+    with SortParam[Issues] with PageParam[Issues] {
+  def param[A: Show](key: String)(value: A): Issues =
+    copy(params = params + (key -> implicitly[Show[A]].shows(value)))
+  val filter  = 'filter.?[String]
+  val state   = 'state.?[res.IssueState]
+  def labels(xs: String*) = param("labels")(xs.toSeq)
 
-// case class ReposIssues(repo: Repos, params: Map[String, String] = Map()) extends Method
-//     with Param[ReposIssues] with SortParam[ReposIssues] with PageParam[ReposIssues] {
-//   def complete = repo.complete(_) / "issues" <<? params
-//   def param[A: Show](key: String)(value: A): ReposIssues =
-//     copy(params = params + (key -> implicitly[Show[A]].shows(value)))
-//   val milestone = 'milestone.?[String]
-//   val state     = 'state.?[IssueState]
-//   val assignee  = 'assignee.?[String]
-//   val creator   = 'creator.?[String]
-//   val mentioned = 'mentioned.?[String]
-//   def labels(xs: String*) = param("labels")(xs.toSeq)
-// }
+  def build: Request = Gigahorse.url(s"$baseUrl/issues").
+    addQueryString(params.toList: _*)
+}
+
+case class ReposIssues(repo: Repos, params: Map[String, String] = Map()) extends RequestBuilder
+    with Param[ReposIssues] with SortParam[ReposIssues] with PageParam[ReposIssues] {
+  def param[A: Show](key: String)(value: A): ReposIssues =
+    copy(params = params + (key -> implicitly[Show[A]].shows(value)))
+  val milestone = 'milestone.?[String]
+  val state     = 'state.?[res.IssueState]
+  val assignee  = 'assignee.?[String]
+  val creator   = 'creator.?[String]
+  val mentioned = 'mentioned.?[String]
+  def labels(xs: String*) = param("labels")(xs.toSeq)
+  def build: Request =
+    Gigahorse.url(s"${repo.build.url}/issues").
+      addQueryString(params.toList: _*)
+}
 
 // /** represents users request.
 //  * @see https://developer.github.com/v3/users/
@@ -172,28 +176,30 @@ case class GitBlobs(repo: Repos, sha: String, mimes: Seq[MediaType]) extends Req
 //     copy(params = params + (key -> implicitly[Show[A]].shows(value)))
 // }
 
-// /** represents raw URL. used for navigating to the next page in paginated results.
-//  */
-// case class UrlMethod(url: String, params: Map[String, String] = Map()) extends Method
-//     with Param[UrlMethod] with SortParam[UrlMethod] with PageParam[UrlMethod] {
-//   def complete = { _ => dispatch.url(url) <<? params }
-//   def param[A: Show](key: String)(value: A): UrlMethod =
-//     copy(params = params + (key -> implicitly[Show[A]].shows(value)))
-// }
+/** represents raw URL. used for navigating to the next page in paginated results.
+ */
+case class UrlBuilder(url: String, params: Map[String, String] = Map()) extends RequestBuilder
+    with Param[UrlBuilder] with SortParam[UrlBuilder] with PageParam[UrlBuilder] {
+  def param[A: Show](key: String)(value: A): UrlBuilder =
+    copy(params = params + (key -> implicitly[Show[A]].shows(value)))
+  def build: Request =
+    Gigahorse.url(s"$url").
+      addQueryString(params.toList: _*)
+}
 
-// trait PageParam[R] { self: Param[R] =>
-//   val page    = 'page.?[Int]
-//   val per_page = 'per_page.?[Int]
-// }
+trait PageParam[R] { self: Param[R] =>
+  val page    = 'page.?[Int]
+  val per_page = 'per_page.?[Int]
+}
 
-// trait SortParam[R] { self: Param[R] =>
-//   val sort      = 'sort.?[String]
-//   val direction = 'direction.?[String]
-//   val `type`    = 'type.?[String]
-//   val since   = 'since.?[Calendar]
-//   def asc: R  = direction("asc")
-//   def desc: R = direction("desc") 
-// }
+trait SortParam[R] { self: Param[R] =>
+  val sort      = 'sort.?[String]
+  val direction = 'direction.?[String]
+  val `type`    = 'type.?[String]
+  val since     = 'since.?[Calendar]
+  def asc: R    = direction("asc")
+  def desc: R   = direction("desc")
+}
 
 trait Param[R] {
   val params: Map[String, String]

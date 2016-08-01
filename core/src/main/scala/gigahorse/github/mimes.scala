@@ -41,7 +41,7 @@ object MediaType {
         val version = v map { "." + _ } getOrElse ""
         val param   = p map { "." + _ } getOrElse ""
         val fmt     = f map { "+" + _ } getOrElse ""
-        s"""application/vnd.github.$version$param$fmt"""
+        s"""application/vnd.github$version$param$fmt"""
     }
   }
 
