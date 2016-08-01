@@ -136,8 +136,6 @@
       "extra": [
       ]
     },
-
-
     {
       "name": "GitRef",
       "namespace": "gigahorse.github.response",
@@ -163,7 +161,6 @@
       "extra": [
       ]
     },
-
     {
       "name": "GitObject",
       "namespace": "gigahorse.github.response",
@@ -182,6 +179,91 @@
         },
         {
           "name": "type",
+          "type": "String",
+          "since": "0.0.0"
+        }
+      ],
+      "extra": [
+      ]
+    },
+    {
+      "name": "GitCommit",
+      "namespace": "gigahorse.github.response",
+      "type": "record",
+      "target": "Scala",
+      "fields": [
+        {
+          "name": "url",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "sha",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "committer",
+          "type": "gigahorse.github.response.GitUser",
+          "since": "0.0.0"
+        },
+        {
+          "name": "message",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "tree",
+          "type": "gigahorse.github.response.GitShaUrl",
+          "since": "0.0.0"
+        },
+        {
+          "name": "parents",
+          "type": "gigahorse.github.response.GitShaUrl*",
+          "since": "0.0.0"
+        }
+      ],
+      "extra": [
+      ]
+    },
+    {
+      "name": "GitUser",
+      "namespace": "gigahorse.github.response",
+      "type": "record",
+      "target": "Scala",
+      "fields": [
+        {
+          "name": "name",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "email",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "date",
+          "type": "java.util.Calendar",
+          "since": "0.0.0"
+        }
+      ],
+      "extra": [
+      ]
+    },
+    {
+      "name": "GitShaUrl",
+      "namespace": "gigahorse.github.response",
+      "type": "record",
+      "target": "Scala",
+      "fields": [
+        {
+          "name": "url",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "sha",
           "type": "String",
           "since": "0.0.0"
         }

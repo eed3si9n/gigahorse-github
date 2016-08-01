@@ -33,6 +33,8 @@ object Github {
     asJson andThen Converter.fromJsonUnsafe[res.GitRef]
   val asGitRefs: Response => res.Paged[res.GitRef] =
     res.Paged.parseArray(Converter.fromJsonUnsafe[res.GitRef])
+  val asGitCommit: Response => res.GitCommit =
+    asJson andThen Converter.fromJsonUnsafe[res.GitCommit]
 }
 
 // package object response {
@@ -40,7 +42,6 @@ object Github {
 //   import repatch.github.{response => res}
 //   import dispatch.as.json4s.Json
 
-//   val Repo:         Response => res.Repo = Json andThen res.Repo.apply
 //   val Repos:        Response => res.Paged[res.Repo] = res.Paged.parseArray(res.Repo.apply)
 //   val GitRef:       Response => res.GitRef = Json andThen res.GitRef.apply
 //   val GitRefs:      Response => res.Paged[res.GitRef] = res.Paged.parseArray(res.GitRef.apply)

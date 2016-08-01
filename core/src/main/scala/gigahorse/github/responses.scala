@@ -9,32 +9,6 @@ import scala.json.ast.unsafe.JValue
 // import collection.immutable.Map
 // import repatch.github.request.Show
 
-// /** represents git reference response.
-//  * @see http://developer.github.com/v3/git/refs/
-//  */
-// case class GitRef(ref: String,
-//   url: String,
-//   git_object: GitObject)
-
-// /** provides parsing support for a git reference response. */
-// object GitRef extends Parse with CommonField {
-//   def apply(json: JValue): GitRef =
-//     GitRef(ref = ref(json),
-//       url = url(json),
-//       git_object = GitObject(git_object(json)))
-// }
-
-// object GitObject extends Parse with CommonField {
-//   def apply(json: JValue): GitObject =
-//     GitObject(sha = sha(json),
-//       url = url(json),
-//       `type` = `type`(json))
-// }
-
-// case class GitObject(sha: String,
-//   url: String,
-//   `type`: String)
-
 // object GitCommit extends Parse with CommonField {  
 //   def apply(json: JValue): GitCommit =
 //     GitCommit(sha = sha(json),

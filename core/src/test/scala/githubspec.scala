@@ -15,7 +15,7 @@ class GithubSpec extends AsyncFlatSpec {
   val user = "eed3si9n"
   val name = "gigahorse"
   val tree_sha = "b1193d20d761654b7fc35a48cd64b53aedc7a697"
-  val commit_sha = "bcf6d255317088ca1e32c6e6ecd4dce1979ac718"
+  val commit_sha = "d7b8bb43d003e58f55af7b3592e7ce1fb986d0f3"
   val blob_sha = "3baebe52555bc73ad1c9a94261c4552fb8d771cd"
   "Github.repo(:owner, :repo)" should "return a json object that can be parsed manually" in
     withHttp { http =>
@@ -85,97 +85,88 @@ class GithubSpec extends AsyncFlatSpec {
       }
     }
 
-/*s2"""
-  `gh.repo(:owner, :repo).git_commit(:sha)` should
-    return a json object that can be parsed using `GitCommit`                 ${commit1}
-    return a json object that can be parsed manually                          ${commit2}
+  "Github.repo(:owner, :repo).git_commit(:sha)" should "return a json object that can be parsed using asGitCommit" in
+    withHttp { http =>
+      // `client(repos(user, name).git_commit(commit_sha))` constructs a request to
+      // https://api.github.com/repos/dispatch/reboot/git/commits/bcf6d255317088ca1e32c6e6ecd4dce1979ac718
+      // Returned json object can then be parsed using `GitCommit`,
+      // which returns a GitCommit case class
+      val f = http.run(client(Github.repo(user, name).git_commit(commit_sha)), Github.asGitCommit)
+      f map { commit =>
+        assert(commit.committer.name == "Eugene Yokota")
+      }
+    }
 
-  `gh.repo(:owner, :repo).git_commit(git_ref)` should
+  "Github.repo(:owner, :repo).git_commit(git_ref)" should "return a commit json object for the given GitRef" in
+    withHttp { http =>
+      for {
+        // this returns a GitRef case class
+        master <- http.run(client(Github.repo(user, name).git_refs.heads("0.1.x")), Github.asGitRef)
+        // this returns a GitCommit case class
+        commit <- http.run(client(Github.repo(user, name).git_commit(master)), Github.asGitCommit)
+      } yield assert(commit.sha == master.`object`.sha)
+    }
+
+/*s2"""
+
+  `Github.repo(:owner, :repo).git_commit(git_ref)` should
     return a commit json object for the given `GitRef`                        ${commit3}
 
-  `gh.repo(:owner, :repo).git_trees(:sha)` should
+  `Github.repo(:owner, :repo).git_trees(:sha)` should
     return a json object that can be parsed using `GitTrees`                  ${trees1}
 
-  `gh.repo(:owner, :repo).git_trees(:sha).recursive(10)` should
+  `Github.repo(:owner, :repo).git_trees(:sha).recursive(10)` should
     return a json object that contains subdir blobs                           ${recursive1}
 
-  `gh.repo(:owner, :repo).git_trees(commit)` should
+  `Github.repo(:owner, :repo).git_trees(commit)` should
     return a tree json object for the given `GitCommit`                       ${trees2}
 
-  `gh.repo(:owner, :repo).git_blob(:sha)` should
+  `Github.repo(:owner, :repo).git_blob(:sha)` should
     return a json object that can be parsed using `GitBlob`                   ${blob1}
 
-  `gh.repo(:owner, :repo).git_blob(:sha).raw` should
+  `Github.repo(:owner, :repo).git_blob(:sha).raw` should
     return raw blob bytes                                                     ${raw1}
 
-  `gh.issues` should
+  `Github.issues` should
     return a json array that can be parsed using `Issues`                     ${issues1}
 
-  `gh.issues.labels("bug").asc` should
+  `Github.issues.labels("bug").asc` should
     return a json array that can be parsed using `Issues`                     ${issues2}
 
-  `gh.repo(:owner, :repo).issues` should
+  `Github.repo(:owner, :repo).issues` should
     return a json array that can be parsed using `Issues`                     ${issues3}    
 
-  `gh.repo(:owner, :repo).issues.page(1).per_page(1)` should
+  `Github.repo(:owner, :repo).issues.page(1).per_page(1)` should
     return a json array with Link HTTP header for the next page`              ${pagination1}    
 
-  `gh.user` should
+  `Github.user` should
     return a json object that can be parsed using `User`                      ${user1}
 
-  `gh.user(:user)` should
+  `Github.user(:user)` should
     return a json object that can be parsed using `User`                      ${user2}
 
-  `gh.user.orgs` should
+  `Github.user.orgs` should
     return a json object that can be parsed using `Orgs`                      ${orgs1}
 
-  `gh.user(:user).orgs` should
+  `Github.user(:user).orgs` should
     return a json object that can be parsed using `Orgs`                      ${orgs2}
 
-  `gh.search.repos("reboot language:scala")` should
+  `Github.search.repos("reboot language:scala")` should
     return a json object that can be parsed using `ReposSearch`               ${search1}
 
-  `gh.search.code("case class Req in:file repo:dispatch/reboot")` should
+  `Github.search.code("case class Req in:file repo:dispatch/reboot")` should
     return a json object that can be parsed using `CodeSearch`                ${search2}
     return a json object that can be parsed using `TextMatches` given
     HTTP header Accept: application/vnd.github.v3.text-match+json             ${search3}
 
-  `gh.search.issues("oauth client access repo:eed3si9n/repatch-github")` should
+  `Github.search.issues("oauth client access repo:eed3si9n/repatch-github")` should
     return a json object that can be parsed using `IssuesSearch`              ${search4}
 
-  `gh.search.users("eed3si9n")` should
+  `Github.search.users("eed3si9n")` should
     return a json object that can be parsed using `UsersSearch`               ${search5}
                                                                               """
 */
 
-  // def commit1 = {
-  //   // `client(repos(user, name).git_commit(commit_sha))` constructs a request to
-  //   // https://api.github.com/repos/dispatch/reboot/git/commits/bcf6d255317088ca1e32c6e6ecd4dce1979ac718
-  //   // Returned json object can then be parsed using `GitCommit`,
-  //   // which returns a GitCommit case class
-  //   val commit = http(client(gh.repo(user, name).git_commit(commit_sha)) > as.repatch.github.response.GitCommit)
-  //   commit().committer.name must_== "softprops"
-  // }
-  
-  // def commit2 = {
-  //   // Returned json object can also be parsed field-by-field using an extractor
-  //   val json = http(client(gh.repo(user, name).git_commit(commit_sha)) > as.json4s.Json)
-  //   val msg = json map { js =>
-  //     import repatch.github.response.GitCommit._
-  //     message(js)
-  //   }
-  //   msg().startsWith("send") must_== true
-  // }
-  
-  // def commit3 = {
-  //   // this returns a GitRef case class
-  //   val master = http(client(gh.repo(user, name).git_refs.heads("master")) > as.repatch.github.response.GitRef)
-    
-  //   // this returns a GitCommit case class
-  //   val commit = http(client(gh.repo(user, name).git_commit(master())) > as.repatch.github.response.GitCommit)
-  //   commit().sha must_== master().git_object.sha
-  // }
-      
   // def trees1 = {
   //   // `client(repos(user, name).git_trees(tree_sha))` constructs a request to
   //   // https://api.github.com/repos/dispatch/reboot/git/trees/563c7dcea4bbb71e49313e92c01337a0a4b7ce72

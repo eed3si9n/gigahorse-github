@@ -2,6 +2,7 @@ package gigahorse.github
 package request
 
 import gigahorse._
+import gigahorse.github.{response => res}
 // import org.json4s._
 // import repatch.github.{response => res}
 // import java.util.Calendar
@@ -21,8 +22,8 @@ object RequestBuilder {
  */
 case class Repos(owner: String, name: String) extends RequestBuilder {
   def git_refs = GitRefs(this, None)
-  // def git_commit(ref: res.GitRef): GitCommits = GitCommits(this, ref.git_object.sha)
-  // def git_commit(sha: String): GitCommits = GitCommits(this, sha)
+  def git_commit(ref: res.GitRef): GitCommits = GitCommits(this, ref.`object`.sha)
+  def git_commit(sha: String): GitCommits = GitCommits(this, sha)
   // def git_trees(commit: res.GitCommit): GitTrees = GitTrees(this, commit.tree.sha)
   // def git_trees(sha: String): GitTrees = GitTrees(this, sha)
   // def git_blob(sha: String): GitBlobs = GitBlobs(this, sha, MediaType.default)
@@ -50,12 +51,13 @@ case class GitRefs(repo: Repos, ref: Option[String], params: Map[String, String]
       addQueryString(params.toList: _*)
 }
 
-// /** represents git commit request.
-//  * @see http://developer.github.com/v3/git/commits/
-//  */
-// case class GitCommits(repo: Repos, sha: String) extends Method {
-//   def complete = repo.complete(_) / "git" / "commits" / sha
-// }
+/** represents git commit request.
+ * @see http://developer.github.com/v3/git/commits/
+ */
+case class GitCommits(repo: Repos, sha: String) extends RequestBuilder {
+  def build: Request =
+    Gigahorse.url(s"${repo.build.url}/git/commits/$sha")
+}
 
 // /** represents git tree request.
 //  * @see http://developer.github.com/v3/git/trees/
