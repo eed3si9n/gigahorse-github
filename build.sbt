@@ -10,7 +10,7 @@ lazy val commonSettings: Seq[Def.Setting[_]] = Seq(
   version := s"gigahorse${gigahorseVersion}_${baseVersion}",
   organization := "com.eed3si9n",
   scalaVersion := "2.11.8",
-  crossScalaVersions := Seq("2.11.8"),
+  crossScalaVersions := Seq("2.11.8", "2.10.6"),
   fork in run := true
 )
 
