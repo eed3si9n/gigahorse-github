@@ -351,43 +351,36 @@ scala> http.close // make sure you call this
 get a single user.
 
 ```scala
-scala> val usr = http(client(gh.user("eed3si9n")) > as.repatch.github.response.User)
-usr: dispatch.Future[repatch.github.response.User] = scala.concurrent.impl.Promise$DefaultPromise@2f7e1e92
+scala> val http = Gigahorse.http(Gigahorse.config)
+http: gigahorse.HttpClient = AchHttpClient(com.ning.http.client.AsyncHttpClientConfig@1c5e0a3)
 
-scala> usr()
-res0: repatch.github.response.User = User(https://api.github.com/users/eed3si9n...
+scala> val usr = http.run(client(Github.user("eed3si9n")), Github.asUser)
+usr: scala.concurrent.Future[gigahorse.github.response.User] = List()
+
+scala> Await.result(usr, 2.minutes)
+res27: gigahorse.github.response.User = User(https://api.github.com/users/eed3si9n, eed3si9n, 184683, Some(https://github.com/eed3si9n),...
 ```
 
 get the authenticated user.
 
 ```scala
-scala> val usr = http(client(gh.user) > as.repatch.github.response.User)
-usr: dispatch.Future[repatch.github.response.User] = scala.concurrent.impl.Promise$DefaultPromise@6e80db14
+scala> val usr = http.run(client(Github.user), Github.asUser)
+usr: scala.concurrent.Future[gigahorse.github.response.User] = List()
 
-scala> usr()
-res1: repatch.github.response.User = User(https://api.github.com/users/eed3si9n,eed3si9n...
+scala> Await.result(usr, 2.minutes)
+res28: gigahorse.github.response.User = User(https://api.github.com/users/eed3si9n, eed3si9n, 184683, Some(https://github.com/eed3si9n),...
 ```
 
 ## [organizations](https://developer.github.com/v3/orgs/)
 
-> List public and private organizations for the authenticated user.
-
-```scala
-scala> val orgs = http(client(gh.user.orgs) > as.repatch.github.response.Orgs)
-orgs: dispatch.Future[repatch.github.response.Paged[repatch.github.response.User]] = scala.concurrent.impl.Promise$DefaultPromise@3e33ccbd
-
-scala> orgs()
-res2: repatch.github.response.Paged[repatch.github.response.User] = Paged(List(User(https://api.github.com/orgs/ny-scala,ny-scala,591375,...
-```
-
 > List all public organizations for an unauthenticated user. Lists private and public organizations for authenticated users.
 
 ```scala
-scala> val orgs = http(client(gh.user("eed3si9n").orgs) > as.repatch.github.response.Orgs)
-orgs: dispatch.Future[repatch.github.response.Paged[repatch.github.response.User]] = scala.concurrent.impl.Promise$DefaultPromise@111c67c9
+scala> val orgs = http.run(client(Github.user("eed3si9n").orgs), Github.asOrgs)
+orgs: scala.concurrent.Future[gigahorse.github.response.Paged[gigahorse.github.response.User]] = List()
 
-scala> orgs()
-res0: repatch.github.response.Paged[repatch.github.response.User] = Paged(List(User(https://api.github.com/orgs/ny-scala,ny-scala,591375,...
+scala> Await.result(orgs, 2.minutes)
+res29: gigahorse.github.response.Paged[gigahorse.github.response.User] = Paged(Vector(User(https://api.github.com/orgs/scala, scala, 57059, None, Some(https://avatars.githubusercontent.com/u/57059?v=3),...
 ```
 
 ## [search](https://developer.github.com/v3/search/)
@@ -399,13 +392,14 @@ res0: repatch.github.response.Paged[repatch.github.response.User] = Paged(List(U
 here's how to run search for repositories. note response hander needs to be `ReposSearch` instead of `Repos`.
 
 ```scala
-scala> val repos = http(client(gh.search.repos("reboot language:scala")) > as.repatch.github.response.ReposSearch)
-repos: dispatch.Future[repatch.github.response.Paged[repatch.github.response.Repo]] = scala.concurrent.impl.Promise$DefaultPromise@38b556d2
+scala> val repos = http.run(client(Github.search.repos("gigahorse language:scala")), Github.asReposSearch)
+repos: scala.concurrent.Future[gigahorse.github.response.Paged[gigahorse.github.response.Repo]] = List()
 
-scala> repos()
-res0: repatch.github.response.Paged[repatch.github.response.Repo] = Paged(List(Repo(2960515,User(https://api.github.com/users/dispatch,dispatch,1115066,https://github.com/dispatch,https://avatars.githubusercontent.com/u/1115066?,Some(c4050b114966f021d1d91d0b5baabd5c),Organization,false,None,None),reboot,dispatch/reboot,Some(Dispatch with AsyncHttpClient as the underlying library),false,false,https://api.github.com/repos/dispatch/reboot,https://github.com/dispatch/reboot,https://github.com/dispatch/reboot.git,git://github.com/dispatch/reboot.git,git@github.com:dispatch/reboot.git,Some(),Some(Scala),57,188,1012,master,16,Some(java.util.GregorianCalendar[time=?,areFieldsSet=false,areAllFieldsSet=true,lenient=true,zone=sun.util.calendar.ZoneInfo[id="GMT+00:00",offset=0,dstSavings=0,useDayli...
-scala> repos().total_count_opt
-res1: Option[BigInt] = Some(7)
+scala> Await.result(repos, 2.minutes)
+res30: gigahorse.github.response.Paged[gigahorse.github.response.Repo] = Paged(Vector(Repo(https://api.github.com/repos/eed3si9n/gigahorse, gigahorse, 64110679,
+
+scala> Await.result(repos, 2.minutes).total_count_opt
+res31: Option[Long] = Some(2)
 ```
 
 ### search code
@@ -415,26 +409,24 @@ res1: Option[BigInt] = Some(7)
 use `CodeSearch` as the response handler. this returns `Paged[BlobRef]`.
 
 ```scala
-scala> val code = http(client(gh.search.code("\"case class Req\" in:file repo:dispatch/reboot")) >
-         as.repatch.github.response.CodeSearch)
-code: dispatch.Future[repatch.github.response.Paged[repatch.github.response.BlobRef]] = scala.concurrent.impl.Promise$DefaultPromise@13222245
+scala> val code = http.run(client(Github.search.code("\"abstract class Gigahorse\" in:file repo:eed3si9n/gigahorse")),
+         Github.asCodeSearch)
+code: scala.concurrent.Future[gigahorse.github.response.Paged[gigahorse.github.response.BlobRef]] = List()
 
-scala> code()
-res1: repatch.github.response.Paged[repatch.github.response.BlobRef] = Paged(List(BlobRef(06ad6a552522c66ba75f2493abf0a971afe4af5d,https://api.github.com/repositories/2960515/contents/core/src/main/scala/requests.scala?ref=9844a3e44728ba402758c7f40512c575c2ac8304,...
+scala> Await.result(code, 2.minutes)
+res32: gigahorse.github.response.Paged[gigahorse.github.response.BlobRef] = Paged(Vector(BlobRef(https://api.github.com/repositories/64110679/contents/core/src/main/scala/gigahorse/Gigahorse.scala?ref=2c795c967c43cd5ab0782c2a4a86cd5413d5536a,...
 ```
 
 searching also supports `text_match` media type, which uses `TextMatches` response handler.
 
 ```scala
-scala> val tms = http(client.text_match(gh.search.code("\"case class Req\" in:file repo:dispatch/reboot")) >
-         as.repatch.github.response.TextMatches)
-tms: dispatch.Future[repatch.github.response.Paged[repatch.github.response.TextMatches]] = scala.concurrent.impl.Promise$DefaultPromise@4d186ab
+scala> val tms = http.run(client.text_match(Github.search.code("\"abstract class Gigahorse\" in:file repo:eed3si9n/gigahorse")),
+         Github.asTextMatches)
+tms: scala.concurrent.Future[gigahorse.github.response.Paged[gigahorse.github.response.TextMatches]] = List()
 
-scala> tms()
-res0: repatch.github.response.Paged[repatch.github.response.TextMatches] = 
-Paged(List(TextMatches(List(TextMatch(https://api.github.com/repositories/2960515/contents/core/src/main/scala/requests.scala?ref=9844a3e44728ba402758c7f40512c575c2ac8304,FileContent,content, transparency for the
-  underlying RequestBuilder. */
-case class Req(run: RequestBuilder =,List(SearchTerm(case class Req,List(54, 68))))))),Map(),Some(1),Some(false))
+scala> Await.result(tms, 2.minutes)
+res33: gigahorse.github.response.Paged[gigahorse.github.response.TextMatches] =
+Paged(Vector(TextMatches(Vector(TextMatch(https://api.github.com/repositories/64110679/contents/core/src/main/scala/gigahorse/Gigahorse.scala?ref=2c795c967c43cd5ab0782c2a4a86cd5413d5536a, FileContent....
 ```
 
 ### search issues
@@ -444,13 +436,11 @@ case class Req(run: RequestBuilder =,List(SearchTerm(case class Req,List(54, 68)
 use `ReposSearch` as the response handler.
 
 ```scala
-scala> val iss = http(client(gh.search.issues("oauth client access repo:eed3si9n/repatch-github")) > 
-         as.repatch.github.response.IssuesSearch)
-iss: dispatch.Future[repatch.github.response.Paged[repatch.github.response.Issue]] = scala.concurrent.impl.Promise$DefaultPromise@1b46c269
+scala> val iss = http.run(client(Github.search.issues("sbt-datatype 0.2.3 repo:eed3si9n/gigahorse")), Github.asIssuesSearch)
+iss: scala.concurrent.Future[gigahorse.github.response.Paged[gigahorse.github.response.Issue]] = List()
 
-scala> iss()
-res0: repatch.github.response.Paged[repatch.github.response.Issue] = 
-Paged(List(Issue(https://api.github.com/repos/eed3si9n/repatch-github/issues/1,Some(https://github.com/eed3si9n/repatch-github/pull/1),
+scala> Await.result(iss, 2.minutes)
+res34: gigahorse.github.response.Paged[gigahorse.github.response.Issue] = Paged(Vector(Issue(https://api.github.com/repos/eed3si9n/gigahorse/issues/1, Some(https://github.com/eed3si9n/gigahorse/pull/1), Some(1), Some(closed), Some(sbt-datatype 0.2.3),....
 ```
 
 ### search users
@@ -458,9 +448,11 @@ Paged(List(Issue(https://api.github.com/repos/eed3si9n/repatch-github/issues/1,S
 > Find users via various criteria. (This method returns up to 100 results per page.)
 
 ```scala
-scala> val users = http(client(gh.search.users("eed3si9n")) > as.repatch.github.response.UsersSearch)
-users: dispatch.Future[repatch.github.response.Paged[repatch.github.response.User]] = scala.concurrent.impl.Promise$DefaultPromise@438aad9d
+scala> val users = http.run(client(Github.search.users("eed3si9n")), Github.asUsersSearch)
+users: scala.concurrent.Future[gigahorse.github.response.Paged[gigahorse.github.response.User]] = List()
 
-scala> users()
-res0: repatch.github.response.Paged[repatch.github.response.User] = Paged(List(User(https://api.github.com/users/eed3si9n,eed3si9n,184683,...
+scala> Await.result(users, 2.minutes)
+res35: gigahorse.github.response.Paged[gigahorse.github.response.User] = Paged(Vector(User(https://api.github.com/users/eed3si9n, eed3si9n, 184683, Some(https://github.com/eed3si9n)...
+
+scala> http.close // make sure you call this
 ```
