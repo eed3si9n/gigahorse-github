@@ -5,7 +5,7 @@
 // DO NOT EDIT MANUALLY
 package gigahorse.github.response
 import _root_.sjsonnew.{ deserializationError, serializationError, Builder, JsonFormat, Unbuilder }
-trait RepoFormats { self: sjsonnew.BasicJsonProtocol with gigahorse.github.response.UserFormats =>
+trait RepoFormats { self: gigahorse.github.response.UserFormats with sjsonnew.BasicJsonProtocol =>
 implicit lazy val RepoFormat: JsonFormat[gigahorse.github.response.Repo] = new JsonFormat[gigahorse.github.response.Repo] {
   override def read[J](jsOpt: Option[J], unbuilder: Unbuilder[J]): gigahorse.github.response.Repo = {
     jsOpt match {

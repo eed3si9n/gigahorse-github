@@ -5,7 +5,7 @@
 // DO NOT EDIT MANUALLY
 package gigahorse.github.response
 import _root_.sjsonnew.{ deserializationError, serializationError, Builder, JsonFormat, Unbuilder }
-trait TextMatchFormats { self: sjsonnew.BasicJsonProtocol with gigahorse.github.response.SearchTermFormats =>
+trait TextMatchFormats { self: gigahorse.github.response.SearchTermFormats with sjsonnew.BasicJsonProtocol =>
 implicit lazy val TextMatchFormat: JsonFormat[gigahorse.github.response.TextMatch] = new JsonFormat[gigahorse.github.response.TextMatch] {
   override def read[J](jsOpt: Option[J], unbuilder: Unbuilder[J]): gigahorse.github.response.TextMatch = {
     jsOpt match {

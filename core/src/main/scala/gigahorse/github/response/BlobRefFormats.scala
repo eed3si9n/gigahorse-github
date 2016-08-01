@@ -5,7 +5,7 @@
 // DO NOT EDIT MANUALLY
 package gigahorse.github.response
 import _root_.sjsonnew.{ deserializationError, serializationError, Builder, JsonFormat, Unbuilder }
-trait BlobRefFormats { self: sjsonnew.BasicJsonProtocol with gigahorse.github.response.RepoFormats =>
+trait BlobRefFormats { self: gigahorse.github.response.RepoFormats with sjsonnew.BasicJsonProtocol =>
 implicit lazy val BlobRefFormat: JsonFormat[gigahorse.github.response.BlobRef] = new JsonFormat[gigahorse.github.response.BlobRef] {
   override def read[J](jsOpt: Option[J], unbuilder: Unbuilder[J]): gigahorse.github.response.BlobRef = {
     jsOpt match {
