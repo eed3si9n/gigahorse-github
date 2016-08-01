@@ -3,6 +3,12 @@ gigahorse-github
 
 gigahorse-github is a Gigahorse plugin for github API v3.
 
+## setup
+
+```scala
+libraryDependencies += "com.eed3si9n" %% "gigahorse-github" % "gigahorse0.1.1_0.1.0"
+```
+
 ## authentication
 
 you can choose one from the four authenticating clients:

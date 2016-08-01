@@ -1,0 +1,14 @@
+This is the initial release of gigahorse-github, a Gigahorse plugin for Github API v3.
+
+Here’s a quick example of how to get repository info:
+
+    scala> import gigahorse._, gigahorse.github.Github, scala.concurrent._, duration._
+
+    scala> val client = Github.localConfigClient
+    client: gigahorse.github.LocalConfigClient = LocalConfigClient(OAuthClient(****, List(StringMediaType(application/json), GithubMediaType(Some(v3),None,Some(json)))))
+
+    scala> Gigahorse.withHttp { http =>
+             val f = http.run(client(Github.repo("eed3si9n", "gigahorse-github")), Github.asRepo)
+             Await.result(f, 2.minutes)
+           }
+    res0: gigahorse.github.response.Repo = Repo(https://api.github.com/repos/eed3si9n/gigahorse-github, gigahorse-github, 64614221, User(https://api.github.com/users/eed3si9n, eed3si9n, 184683, Some(https://github.com/eed3si9n), Some(https://avatars.githubusercontent.com/u/184683?v=3), Some(), Some(User), Some(true), None, None), eed3si9n/gigahorse-github, Some(Gigahorse plugin for Github API v3),...
