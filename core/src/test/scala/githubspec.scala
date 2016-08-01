@@ -133,7 +133,7 @@ class GithubSpec extends AsyncFlatSpec with Matchers {
       }
     }
 
-  "Github.repo(:owner, :repo).git_trees(commit)" should "return a tree json object for the given `GitCommit`" in
+  "Github.repo(:owner, :repo).git_trees(commit)" should "return a tree json object for the given asGitCommit" in
     withHttp { http =>
       for {
         // this returns a GitCommit case class
@@ -146,13 +146,32 @@ class GithubSpec extends AsyncFlatSpec with Matchers {
       }
     }
 
+  "Github.repo(:owner, :repo).git_blob(:sha)" should "return a json object that can be parsed using asGitBlob" in
+    withHttp { http =>
+      // `client(repos(user, name).git_blob(blob_sha))` constructs a request to
+      // https://api.github.com/repos/dispatch/reboot/git/blobs/3baebe52555bc73ad1c9a94261c4552fb8d771cd
+      // Returned json object can then be parsed using `GitBlob`,
+      // which returns a GitBlob case class
+      val f = http.run(client(Github.repo(user, name).git_blob(blob_sha)), Github.asGitBlob)
+      // `as_utf8` method makes the assumption that the contained content is encoded in UTF-8.
+      f map { blob =>
+        assert(blob.asUtf8 startsWith "project/pf.sbt")
+      }
+    }
+
+  "client.raw(Github.repo(:owner, :repo).git_blob(:sha), f)" should "return raw blob bytes" in
+    withHttp { http =>
+      // `client.raw(repo(user, name).git_blob(blob_sha))` constructs a request to
+      // https://api.github.com/repos/dispatch/reboot/git/blobs/3baebe52555bc73ad1c9a94261c4552fb8d771cd
+      // with "application/vnd.github.raw" as http Accept header.
+      // This returns raw bytes. You are responsible for figuring out the charset.
+      val f = http.run(client.raw(Github.repo(user, name).git_blob(blob_sha)), Github.asString)
+      f map { raw =>
+        assert(raw startsWith "project/pf.sbt")
+      }
+    }
+
 /*s2"""
-
-  `Github.repo(:owner, :repo).git_blob(:sha)` should
-    return a json object that can be parsed using `GitBlob`                   ${blob1}
-
-  `Github.repo(:owner, :repo).git_blob(:sha).raw` should
-    return raw blob bytes                                                     ${raw1}
 
   `Github.issues` should
     return a json array that can be parsed using `Issues`                     ${issues1}
@@ -161,10 +180,10 @@ class GithubSpec extends AsyncFlatSpec with Matchers {
     return a json array that can be parsed using `Issues`                     ${issues2}
 
   `Github.repo(:owner, :repo).issues` should
-    return a json array that can be parsed using `Issues`                     ${issues3}    
+    return a json array that can be parsed using `Issues`                     ${issues3}
 
   `Github.repo(:owner, :repo).issues.page(1).per_page(1)` should
-    return a json array with Link HTTP header for the next page`              ${pagination1}    
+    return a json array with Link HTTP header for the next page`              ${pagination1}
 
   `Github.user` should
     return a json object that can be parsed using `User`                      ${user1}
@@ -193,27 +212,6 @@ class GithubSpec extends AsyncFlatSpec with Matchers {
     return a json object that can be parsed using `UsersSearch`               ${search5}
                                                                               """
 */
-
-  // def blob1 = {
-  //   // `client(repos(user, name).git_blob(blob_sha))` constructs a request to
-  //   // https://api.github.com/repos/dispatch/reboot/git/blobs/3baebe52555bc73ad1c9a94261c4552fb8d771cd
-  //   // Returned json object can then be parsed using `GitBlob`,
-  //   // which returns a GitBlob case class
-  //   val blob = http(client(gh.repo(user, name).git_blob(blob_sha)) > as.repatch.github.response.GitBlob)
-    
-  //   // `as_utf8` method makes the assumption that the contained content is encoded in UTF-8.
-  //   (blob().as_utf8 startsWith ".classpath") must_== true
-  // }
-  
-  // def raw1 = {
-  //   // `client.raw(repo(user, name).git_blob(blob_sha))` constructs a request to
-  //   // https://api.github.com/repos/dispatch/reboot/git/blobs/3baebe52555bc73ad1c9a94261c4552fb8d771cd
-  //   // with "application/vnd.github.raw" as http Accept header.
-  //   // This returns raw bytes. You are responsible for figuring out the charset.
-  //   val raw = http(client.raw(gh.repo(user, name).git_blob(blob_sha)) > as.String)
-    
-  //   (raw() startsWith ".classpath") must_== true
-  // }
 
   // def issues1 = {
   //   import repatch.github.response.IssueState._

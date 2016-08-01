@@ -27,6 +27,7 @@ object Github {
 //   type IssueState = repatch.github.response.IssueState
 //   val IssueState = repatch.github.response.IssueState
 
+  val asString: Response => String = Gigahorse.asString
   val asJson: Response => JValue =
     (r: Response) => {
       import sjsonnew.support.scalajson.unsafe.Parser
@@ -45,6 +46,8 @@ object Github {
     asJson andThen Converter.fromJsonUnsafe[res.GitCommit]
   val asGitTrees: Response => res.GitTrees =
     asJson andThen Converter.fromJsonUnsafe[res.GitTrees]
+  val asGitBlob: Response => res.GitBlob =
+    asJson andThen Converter.fromJsonUnsafe[res.GitBlob]
 }
 
 // package object response {

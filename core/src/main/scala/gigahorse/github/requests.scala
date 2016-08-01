@@ -26,7 +26,7 @@ case class Repos(owner: String, name: String) extends RequestBuilder {
   def git_commit(sha: String): GitCommits = GitCommits(this, sha)
   def git_trees(commit: res.GitCommit): GitTrees = GitTrees(this, commit.tree.sha)
   def git_trees(sha: String): GitTrees = GitTrees(this, sha)
-  // def git_blob(sha: String): GitBlobs = GitBlobs(this, sha, MediaType.default)
+  def git_blob(sha: String): GitBlobs = GitBlobs(this, sha, MediaType.default)
   // def issues: ReposIssues = ReposIssues(this, Map())
 
   def build: Request = Gigahorse.url(s"$baseUrl/repos/$owner/$name")
@@ -72,12 +72,13 @@ case class GitTrees(repo: Repos, sha: String, params: Map[String, String] = Map(
       addQueryString(params.toList: _*)
 }
 
-// /** represents git blob request.
-//  * @see http://developer.github.com/v3/git/blobs/
-//  */
-// case class GitBlobs(repo: Repos, sha: String, mimes: Seq[MediaType]) extends Method {
-//   def complete = repo.complete(_) / "git" / "blobs" / sha
-// }
+/** represents git blob request.
+ * @see http://developer.github.com/v3/git/blobs/
+ */
+case class GitBlobs(repo: Repos, sha: String, mimes: Seq[MediaType]) extends RequestBuilder {
+  def build: Request =
+    Gigahorse.url(s"${repo.build.url}/git/blobs/$sha")
+}
 
 // /** represents issues request.
 //  * @see https://developer.github.com/v3/issues/

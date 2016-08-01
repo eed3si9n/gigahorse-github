@@ -401,6 +401,53 @@
       "extra": [
       ]
     },
+    {
+      "name": "GitBlob",
+      "namespace": "gigahorse.github.response",
+      "type": "record",
+      "target": "Scala",
+      "fields": [
+        {
+          "name": "url",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "sha",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "encoding",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "content",
+          "type": "String",
+          "since": "0.0.0"
+        },
+        {
+          "name": "size",
+          "type": "long?",
+          "since": "0.0.0"
+        }
+      ],
+      "extra": [
+        "def asStr(charset: String): String =",
+        "  encoding match {",
+        "    case \"base64\" => new String(bytes, charset)",
+        "    case _ => content",
+        "  }",
+        "def asUtf8: String = asStr(\"UTF-8\")",
+        "def bytes: Array[Byte] =",
+        "  encoding match {",
+        "    case \"utf-8\"  => content.getBytes",
+        "    case \"base64\" => (new sun.misc.BASE64Decoder()).decodeBuffer(content)",
+        "  }"
+      ]
+    },
+
 
     {
       "name": "User",
