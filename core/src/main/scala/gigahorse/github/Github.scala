@@ -29,13 +29,14 @@ object Github {
     }
   val asRepo: Response => res.Repo =
     asJson andThen Converter.fromJsonUnsafe[res.Repo]
-
+  val asGitRef: Response => res.GitRef =
+    asJson andThen Converter.fromJsonUnsafe[res.GitRef]
   val asGitRefs: Response => res.Paged[res.GitRef] =
     res.Paged.parseArray(Converter.fromJsonUnsafe[res.GitRef])
 }
 
 // package object response {
-//   import com.ning.http.client.Response    
+//   import com.ning.http.client.Response
 //   import repatch.github.{response => res}
 //   import dispatch.as.json4s.Json
 

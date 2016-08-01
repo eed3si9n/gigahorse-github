@@ -35,12 +35,12 @@ case class Repos(owner: String, name: String) extends RequestBuilder {
  * @see http://developer.github.com/v3/git/refs/
  */
 case class GitRefs(repo: Repos, ref: Option[String], params: Map[String, String] = Map()) extends RequestBuilder {
-  // def param[A: Show](key: String)(value: A): GitRefs =
-  //   copy(params = params + (key -> implicitly[Show[A]].shows(value)))
-  // def heads: GitRefs = copy(ref = Some("heads"))
-  // def heads(branch: String): GitRefs = copy(ref = Some("heads/" + branch))
-  // def tags: GitRefs = copy(ref = Some("tags"))
-  // def tags(tag: String): GitRefs = copy(ref = Some("tags/" + tag))
+  def param[A: Show](key: String)(value: A): GitRefs =
+    copy(params = params + (key -> implicitly[Show[A]].shows(value)))
+  def heads: GitRefs = copy(ref = Some("heads"))
+  def heads(branch: String): GitRefs = copy(ref = Some("heads/" + branch))
+  def tags: GitRefs = copy(ref = Some("tags"))
+  def tags(tag: String): GitRefs = copy(ref = Some("tags/" + tag))
 
   def build: Request =
     Gigahorse.url(s"${repo.build.url}/git/refs" + (ref match {

@@ -55,7 +55,7 @@ class GithubSpec extends AsyncFlatSpec {
   //     repos().head.full_name must_!= "foo"
   //   }
 
-  "Github.repo(:owner, :repo).git_refs" should "return a json array that can be parsed using `GitRefs`" in
+  "Github.repo(:owner, :repo).git_refs" should "return a json array that can be parsed using asGitRefs" in
     withHttp { http =>
       // `client(repos(user, repo).git_refs)` constructs a request to
       // https://api.github.com/repos/dispatch/reboot/git/refs
@@ -68,9 +68,15 @@ class GithubSpec extends AsyncFlatSpec {
       }
     }
 
-/*s2"""
-  This is a specification to check the github handler
+  "gh.repo(:owner, :repo).git_refs.heads(\"master\")" should "return a json object that can be parsed using asGitRef" in
+    withHttp { http =>
+      val ref = http.run(client(Github.repo(user, name).git_refs.heads("0.1.x")), Github.asGitRef)
+      ref map { master =>
+        assert(master.ref == "refs/heads/0.1.x")
+      }
+    }
 
+/*s2"""
   `gh.repo(:owner, :repo).git_refs.heads(\"master\")` should
     return a json object that can be parsed using `GitRef`                    ${references2}
 
@@ -138,12 +144,6 @@ class GithubSpec extends AsyncFlatSpec {
     return a json object that can be parsed using `UsersSearch`               ${search5}
                                                                               """
 */
-
-  // def references2 = {
-  //   val ref = http(client(gh.repo(user, name).git_refs.heads("master")) > as.repatch.github.response.GitRef)
-  //   val master = ref()
-  //   master.ref must_== "refs/heads/master"
-  // }
 
   // def reftags1 = {
   //   val refs = http(client(gh.repo(user, name).git_refs.tags) > as.repatch.github.response.GitRefs)
