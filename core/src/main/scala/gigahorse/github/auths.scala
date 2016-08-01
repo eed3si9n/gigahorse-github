@@ -23,10 +23,18 @@ case class NoAuthClient(mimes: List[MediaType]) extends AbstractClient with Mime
   def mime(ms: List[MediaType]): NoAuthClient = copy(mimes = ms)
 }
 
+object NoAuthClient {
+  def apply(): NoAuthClient = NoAuthClient(MediaType.default)
+}
+
 case class BasicAuthClient(user: String, pass: String, mimes: List[MediaType]) extends AbstractClient with Mime[BasicAuthClient] {
   def mime(ms: List[MediaType]): BasicAuthClient = copy(mimes = ms)
   override def complete(request: Request): Request =
     super.complete(request).withAuth(user, pass)
+}
+
+object BasicAuthClient {
+  def apply(user: String, pass: String): BasicAuthClient = BasicAuthClient(user, pass, MediaType.default)
 }
 
 object LocalConfigClient {
@@ -67,6 +75,10 @@ case class OAuthClient(token: String, mimes: List[MediaType]) extends AbstractCl
   def mime(ms: List[MediaType]): OAuthClient = copy(mimes = ms)
   override def toString: String =
     s"OAuthClient(****, $mimes)"
+}
+
+object OAuthClient {
+  def apply(token: String): OAuthClient = OAuthClient(token, MediaType.default)
 }
 
 object OAuth {

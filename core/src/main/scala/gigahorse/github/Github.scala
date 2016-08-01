@@ -11,9 +11,14 @@ import java.nio.ByteBuffer
 abstract class Github {
   import res.CustomJsonProtocol._
 
+  def noAuthClient = NoAuthClient()
   def noAuthClient(mimes: List[MediaType]) = NoAuthClient(mimes)
+  def basicAuthClient(user: String, pass: String) =
+    BasicAuthClient(user, pass)
   def basicAuthClient(user: String, pass: String, mimes: List[MediaType]) =
     BasicAuthClient(user, pass, mimes)
+  def oauthClient(token: String) =
+    OAuthClient(token)
   def oauthClient(token: String, mimes: List[MediaType]) =
     OAuthClient(token, mimes)
   def localConfigClient: LocalConfigClient = LocalConfigClient()

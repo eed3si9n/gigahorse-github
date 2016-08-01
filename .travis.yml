@@ -1,0 +1,23 @@
+cache:
+  directories:
+    - $HOME/.ivy2/cache
+    - $HOME/.sbt/boot
+
+language: scala
+
+scala:
+   - 2.10.6
+   - 2.11.8
+
+env:
+  - secure: "pQAFLP4eSpQvo63+LtXO08JETETF9ei7gEfq0wmS/1U1YntRqkc5fhsBq45L6N5FStC0LmmJyff3Kza9Elufj0rkYvQLvQAwotfjNeKN0rBlFusXEH8USvq+ZzAdgEAJYp9I1FIojTwIy22yUfFm8fQVGwiBRB1oulSmz6VJAhLaEmVUotONapVRwresbxEzodyuCp8hxIkQJJ89tx8CfWpifcMcrP6FLnzYSL1A0Kb3QTSih1HhaqO8CfSPzemVXP8IXFyau0pEwnSqAi8lRPh83FUn65f/GsDl1CZUSsdgYSH8Jp4Mr06IGoc56CRe4x5qCkMs7j6Ky8R3PcipVWVz1/1mZy89AxBSfDzTgF2uOpw7xeIIKqXJeE6GeO7v+G5SL098zwzAvBD73Xq2rCXWG2uDA5KyfyhtfNsHNL96F7LmT6r8/ddPm8rbnNi+FvLVulA/FAiI+LSopWSDwzdluQSIgFVoCMbK9Fw3UeKCW/FCxus6BpNlEE4BsyqEJRHilkxZebO/elD4BipqEDBz2riq0W/GeqHoYodnW0fRE1C8Zh61cvD5pZpa7J13sVRE0IyfnjnD05XU9B+PYIGU9BZLBmH6hmKLj3xYAVvcYhbpYjtbKDd8XVhJ8iGeRBG+iGqrGgNwCtL4wvUmhjcz2TT5Dbgq7zJLj6QAS9Y="
+
+script:
+  - sbt ++$TRAVIS_SCALA_VERSION test
+
+jdk:
+  - oraclejdk7
+
+before_cache:
+  - find $HOME/.ivy2 -name "ivydata-*.properties" -print -delete
+  - find $HOME/.sbt  -name "*.lock"               -print -delete

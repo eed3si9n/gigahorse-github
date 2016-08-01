@@ -10,7 +10,11 @@ import scala.json.ast.unsafe._
 import sjsonnew.support.scalajson.unsafe.CompactPrinter
 
 class GithubSpec extends AsyncFlatSpec with Matchers {
-  lazy val client = Github.localConfigClient("gigahorse.token")
+  lazy val client =
+    sys.env.get("GIGAHORSE_TOKEN") match {
+      case Some(x) => Github.oauthClient(x)
+      case _       => Github.localConfigClient("gigahorse.token")
+    }
   val user = "eed3si9n"
   val name = "gigahorse"
   val tree_sha = "d19f416669ea6a2ffc22ab91bed8a9feff48e778"
