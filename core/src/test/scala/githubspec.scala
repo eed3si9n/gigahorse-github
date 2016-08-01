@@ -68,7 +68,7 @@ class GithubSpec extends AsyncFlatSpec {
       }
     }
 
-  "gh.repo(:owner, :repo).git_refs.heads(\"master\")" should "return a json object that can be parsed using asGitRef" in
+  "Github.repo(:owner, :repo).git_refs.heads(\"master\")" should "return a json object that can be parsed using asGitRef" in
     withHttp { http =>
       val ref = http.run(client(Github.repo(user, name).git_refs.heads("0.1.x")), Github.asGitRef)
       ref map { master =>
@@ -76,13 +76,16 @@ class GithubSpec extends AsyncFlatSpec {
       }
     }
 
+  "Github.repo(:owner, :repo).git_refs.tags" should "return a json object that can be parsed using asGitRefs" in
+    withHttp { http =>
+      val refs = http.run(client(Github.repo(user, name).git_refs.tags), Github.asGitRefs)
+      refs map { rs =>
+        val zeroOneZero = (rs find {_.ref == "refs/tags/v0.1.0"}).head
+        assert(zeroOneZero.`object`.`type` == "tag")
+      }
+    }
+
 /*s2"""
-  `gh.repo(:owner, :repo).git_refs.heads(\"master\")` should
-    return a json object that can be parsed using `GitRef`                    ${references2}
-
-  `gh.repo(:owner, :repo).git_refs.tags` should
-    return a json array that can be parsed using `GitRefs`                    ${reftags1}
-
   `gh.repo(:owner, :repo).git_commit(:sha)` should
     return a json object that can be parsed using `GitCommit`                 ${commit1}
     return a json object that can be parsed manually                          ${commit2}
@@ -145,12 +148,6 @@ class GithubSpec extends AsyncFlatSpec {
                                                                               """
 */
 
-  // def reftags1 = {
-  //   val refs = http(client(gh.repo(user, name).git_refs.tags) > as.repatch.github.response.GitRefs)
-  //   val zeroEleven = (refs() find {_.ref == "refs/tags/0.11.0"}).head
-  //   zeroEleven.git_object.`type` must_== "commit"
-  // }
-  
   // def commit1 = {
   //   // `client(repos(user, name).git_commit(commit_sha))` constructs a request to
   //   // https://api.github.com/repos/dispatch/reboot/git/commits/bcf6d255317088ca1e32c6e6ecd4dce1979ac718
