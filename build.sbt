@@ -38,7 +38,7 @@ lazy val root = (project in file(".")).
   ).aggregate(core)
 
 lazy val core = (project in file("core")).
-  enablePlugins(DatatypePlugin, JsonCodecPlugin).
+  enablePlugins(ContrabandPlugin, JsonCodecPlugin).
   settings(commonSettings: _*).
   settings(
     name := "gigahorse-github",
@@ -52,8 +52,10 @@ lazy val core = (project in file("core")).
                                     |import scala.concurrent._
                                     |import scala.concurrent.duration._
                                     |val client = Github.localConfigClient""".stripMargin,
-    datatypeCodecParents in (Compile, generateDatatypes) += "sjsonnew.BasicJsonProtocol",
-    sourceManaged in (Compile, generateDatatypes) := (sourceDirectory in Compile).value / "scala",
+    contrabandCodecParents in (Compile, generateContrabands) += "sjsonnew.BasicJsonProtocol",
+    managedSourceDirectories in Compile +=
+      baseDirectory.value / "src" / "main" / "contraband-scala",
+    sourceManaged in (Compile, generateContrabands) := (sourceDirectory in Compile).value / "contraband-scala",
     // You need this otherwise you get X is already defined as class.
     sources in Compile := (sources in Compile).value.toList.distinct,
     resolvers += Resolver.sonatypeRepo("public")
