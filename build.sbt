@@ -1,6 +1,6 @@
 import Dependencies._
 
-lazy val baseVersion = "0.1.0"
+lazy val baseVersion = "0.2.0"
 
 lazy val commonSettings: Seq[Def.Setting[_]] = Seq(
   fork in run := true,
@@ -38,7 +38,7 @@ lazy val core = (project in file("core")).
   settings(commonSettings: _*).
   settings(
     name := "gigahorse-github",
-    libraryDependencies ++= List(gigahorseCore, sjsonNewScalaJson.value),
+    libraryDependencies ++= List(gigahorseCore, sjsonNewSpray.value, jawnSpray),
     libraryDependencies ++= List(scalatest % Test, gigahorseOkHttp % Test),
     initialCommands in console := """import gigahorse._
                                     |import gigahorse.github.{ Github, response => res }

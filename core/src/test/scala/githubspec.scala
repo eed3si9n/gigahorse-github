@@ -6,8 +6,9 @@ import scala.concurrent.duration._
 import java.io.File
 import gigahorse._, support.okhttp.Gigahorse
 import gigahorse.github.{ Github, response => res }
-import scalajson.ast.unsafe._
-import sjsonnew.support.scalajson.unsafe.CompactPrinter
+// import scalajson.ast.unsafe._
+// import sjsonnew.support.scalajson.unsafe.CompactPrinter
+import spray.json._
 
 class GithubSpec extends AsyncFlatSpec with Matchers {
   lazy val client =
@@ -38,13 +39,13 @@ class GithubSpec extends AsyncFlatSpec with Matchers {
       f map { json =>
         // println(CompactPrinter(json))
         val o = json match {
-          case o: JObject => o
+          case o: JsObject => o
           case _          => sys.error("JObject expected")
         }
         val login =
           for {
-            JField("owner", JObject(owner)) <- o.value.toList
-            JField("login", JString(login)) <- owner
+            ("owner", JsObject(owner)) <- o.fields.toList // o.value.toList
+            ("login", JsString(login)) <- owner
           } yield login
         assert(login.headOption == Some("eed3si9n"))
       }

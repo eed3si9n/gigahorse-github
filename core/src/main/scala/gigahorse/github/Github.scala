@@ -4,9 +4,11 @@ import gigahorse._
 import github.{ response => res }
 import request.{ Repos, Issues, UrlBuilder, Users, Search }
 import sjsonnew.JsonFormat
-import sjsonnew.support.scalajson.unsafe.Converter
-import scalajson.ast.unsafe.JValue
 import java.nio.ByteBuffer
+// import sjsonnew.support.scalajson.unsafe.Converter
+// import scalajson.ast.unsafe.JValue
+import sjsonnew.support.spray.Converter
+import spray.json.JsValue
 
 abstract class Github {
   import res.CustomJsonProtocol._
@@ -36,9 +38,10 @@ abstract class Github {
   val IssueState = gigahorse.github.response.IssueState
 
   val asString: FullResponse => String = GigahorseSupport.asString
-  val asJson: FullResponse => JValue =
+  val asJson: FullResponse => JsValue =
     (r: FullResponse) => {
-      import sjsonnew.support.scalajson.unsafe.Parser
+      // import sjsonnew.support.scalajson.unsafe.Parser
+      import jawn.support.spray.Parser
       val buffer = r.bodyAsByteBuffer
       Parser.parseFromByteBuffer(buffer).get
     }
