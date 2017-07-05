@@ -54,5 +54,6 @@ lazy val core = (project in file("core")).
     sourceManaged in (Compile, generateContrabands) := (sourceDirectory in Compile).value / "contraband-scala",
     // You need this otherwise you get X is already defined as class.
     sources in Compile := (sources in Compile).value.toList.distinct,
-    resolvers += Resolver.sonatypeRepo("public")
+    resolvers += Resolver.sonatypeRepo("public"),
+    crossScalaVersions := Seq("2.12.2", "2.11.11", "2.10.6")
   )
