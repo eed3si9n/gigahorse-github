@@ -1,7 +1,7 @@
 package gigahorse.github
 package request
 
-import gigahorse._
+import gigahorse.{ GigahorseSupport => Gigahorse, _ }
 import gigahorse.github.{response => res}
 import java.util.Calendar
 

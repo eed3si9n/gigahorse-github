@@ -37,7 +37,7 @@ $ git config --global --add github.token your_token
 now we can hit the GitHub API using the token:
 
 ```scala
-scala> import gigahorse._, gigahorse.github.Github
+scala> import gigahorse._, support.okhttp.Gigahorse
 import gigahorse._
 import gigahorse.github.Github
 

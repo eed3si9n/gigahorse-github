@@ -1,0 +1,195 @@
+package gigahorse.github.response
+@target(Scala)
+@codecPackage("gigahorse.github.response")
+@fullCodec("CustomJsonProtocol")
+
+type Repo {
+  url: String! @since("0.0.0")
+  name: String! @since("0.0.0")
+  id: Long! @since("0.0.0")
+  owner: gigahorse.github.response.User! @since("0.0.0")
+  full_name: String! @since("0.0.0")
+  description: String @since("0.0.0")
+  private: Boolean! @since("0.0.0")
+  fork: Boolean! @since("0.0.0")
+  html_url: String @since("0.1.0")
+  clone_url: String @since("0.1.0")
+  git_url: String @since("0.1.0")
+  ssh_url: String @since("0.1.0")
+  homepage: String @since("0.1.0")
+  language: String @since("0.1.0")
+  forks_count: Long @since("0.1.0")
+  watchers_count: Long @since("0.1.0")
+  size: Long @since("0.1.0")
+  default_branch: String @since("0.1.0")
+  open_issues_count: Long @since("0.1.0")
+  pushed_at: java.util.Calendar @since("0.1.0")
+  created_at: java.util.Calendar @since("0.1.0")
+  updated_at: java.util.Calendar @since("0.1.0")
+}
+
+type Authorization {
+  url: String! @since("0.0.0")
+  id: Long! @since("0.0.0")
+  scopes: [String] @since("0.0.0")
+  token: String! @since("0.0.0") 
+  token_last_eight: String! @since("0.0.0")
+  hashed_token: String! @since("0.0.0")
+  note: String @since("0.1.0")
+  note_url: String @since("0.1.0")
+  created_at: java.util.Calendar @since("0.1.0")
+  updated_at: java.util.Calendar @since("0.1.0")
+}
+
+type GitRef {
+  url: String! @since("0.0.0")
+  ref: String! @since("0.0.0")
+  object: gigahorse.github.response.GitObject! @since("0.0.0")
+}
+
+type GitObject {
+  url: String! @since("0.0.0")
+  sha: String! @since("0.0.0")
+  type: String! @since("0.0.0")
+}
+
+type GitCommit {
+  url: String! @since("0.0.0")
+  sha: String! @since("0.0.0")
+  committer: gigahorse.github.response.GitUser! @since("0.0.0")
+  message: String! @since("0.0.0")
+  tree: gigahorse.github.response.GitShaUrl! @since("0.0.0")
+  parents: [gigahorse.github.response.GitShaUrl] @since("0.0.0")
+}
+
+type GitUser {
+  name: String! @since("0.0.0")
+  email: String! @since("0.0.0") 
+  date: java.util.Calendar! @since("0.0.0")
+}
+
+type GitShaUrl {
+  url: String! @since("0.0.0")
+  sha: String! @since("0.0.0")
+}
+
+type GitTrees {
+  url: String! @since("0.0.0")
+  sha: String! @since("0.0.0")
+  tree: [gigahorse.github.response.GitTree] @since("0.0.0")
+}
+
+type GitTree {
+  url: String! @since("0.0.0")
+  sha: String! @since("0.0.0")
+  path: String! @since("0.0.0") 
+  mode: String! @since("0.0.0")
+  type: String! @since("0.0.0")
+  size: Long @since("0.1.0")
+}
+
+type GitBlob {
+  url: String! @since("0.0.0")
+  sha: String! @since("0.0.0")
+  encoding: String! @since("0.0.0") 
+  content: String! @since("0.0.0")
+  size: Long @since("0.0.0")
+
+#x def asStr(charset: String): String =
+#x   encoding match {
+#x     case "base64" => new String(bytes, charset)
+#x     case _ => content
+#x   }
+#x def asUtf8: String = asStr("UTF-8")
+#x def bytes: Array[Byte] =
+#x   encoding match {
+#x     case "utf-8"  => content.getBytes
+#x     case "base64" => (new sun.misc.BASE64Decoder()).decodeBuffer(content)
+#x   }
+}
+
+enum IssueState {
+  open
+  closed
+  all
+
+#x implicit val issueStateShow: gigahorse.github.Show[IssueState] = gigahorse.github.Show.showA[IssueState]
+}
+
+type Issue {
+  url: String! @since("0.0.0")
+  html_url: String @since("0.1.0")
+  number: Long @since("0.1.0")
+  state: gigahorse.github.response.IssueState @since("0.1.0")
+  title: String @since("0.1.0")
+  body: String @since("0.1.0")
+  user: gigahorse.github.response.User @since("0.1.0")
+  labels: [gigahorse.github.response.Label] @since("0.1.0")
+  assignee: gigahorse.github.response.User @since("0.1.0")
+  Milestone: gigahorse.github.response.Milestone @since("0.1.0")
+  comments: Long @since("0.1.0")
+  pull_request: gigahorse.github.response.PullRequest @since("0.1.0")
+  closed_at: java.util.Calendar @since("0.1.0")
+  created_at: java.util.Calendar @since("0.1.0")
+  updated_at: java.util.Calendar @since("0.1.0")
+}
+
+type Milestone {
+  url: String! @since("0.0.0")
+  number: Long! @since("0.0.0")
+  state: String! @since("0.0.0") 
+  title: String! @since("0.0.0")
+}
+
+type PullRequest {
+  url: String! @since("0.0.0")
+  html_url: String @since("0.0.0")
+  diff_url: String @since("0.1.0")
+  patch_url: String @since("0.1.0")
+}
+
+type Label {
+  url: String! @since("0.0.0")
+  name: String! @since("0.0.0")
+  color: String! @since("0.0.0")
+}
+
+type BlobRef {
+  url: String! @since("0.0.0")
+  sha: String! @since("0.0.0")
+  name: String! @since("0.0.0")
+  path: String! @since("0.0.0") 
+  repository: gigahorse.github.response.Repo! @since("0.0.0")
+  git_url: String @since("0.1.0")
+  html_url: String @since("0.1.0")
+}
+
+type TextMatch {
+  object_url: String! @since("0.0.0")
+  object_type: String! @since("0.0.0")
+  property: String! @since("0.0.0")
+  fragment: String! @since("0.0.0")
+  matches: [gigahorse.github.response.SearchTerm] @since("0.0.0")
+}
+
+type TextMatches {
+  text_matches: [gigahorse.github.response.TextMatch] @since("0.0.0")
+}
+
+type SearchTerm {
+  text: String! @since("0.0.0")
+  indices: [Int] @since("0.0.0")
+}
+
+type User {
+  url: String! @since("0.0.0")
+  login: String! @since("0.0.0")
+  id: Long! @since("0.0.0")
+  html_url: String @since("0.1.0")
+  avatar_url: String @since("0.1.0")
+  gravatar_id: String @since("0.1.0")
+  type: String @since("0.1.0")
+  site_admin: Boolean @since("0.1.0")
+  name: String @since("0.1.0")
+  email: String @since("0.1.0")
+}
