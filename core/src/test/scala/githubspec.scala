@@ -4,9 +4,9 @@ import org.scalatest._
 import scala.concurrent._
 import scala.concurrent.duration._
 import java.io.File
-import gigahorse._
+import gigahorse._, support.okhttp.Gigahorse
 import gigahorse.github.{ Github, response => res }
-import scala.json.ast.unsafe._
+import scalajson.ast.unsafe._
 import sjsonnew.support.scalajson.unsafe.CompactPrinter
 
 class GithubSpec extends AsyncFlatSpec with Matchers {
@@ -23,9 +23,9 @@ class GithubSpec extends AsyncFlatSpec with Matchers {
 
   "Github.repo(:owner, :repo)" should "return OK" in
     withHttp { http =>
-      val f = http.process(client(Github.repo(user, name)))
+      val f = http.processFull(client(Github.repo(user, name)))
       f map { response =>
-        assert(response.status == 200, response.body)
+        assert(response.status == 200, response.bodyAsString)
       }
     }
 

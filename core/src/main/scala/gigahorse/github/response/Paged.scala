@@ -1,8 +1,8 @@
 package gigahorse.github
 package response
 
-import gigahorse.Response
-import scala.json.ast.unsafe._
+import gigahorse.FullResponse
+import scalajson.ast.unsafe._
 import sjsonnew.JsonFormat
 import sjsonnew.support.scalajson.unsafe.Converter
 
@@ -21,8 +21,8 @@ case class Paged[A](items: Vector[A],
 object Paged {
   implicit def pageToSeq[A](paged: Paged[A]): Vector[A] = paged.items
 
-  def parseArray[A: JsonFormat]: Response => Paged[A] =
-    (res: Response) => {
+  def parseArray[A: JsonFormat]: FullResponse => Paged[A] =
+    (res: FullResponse) => {
       val json = Github.asJson(res)
       val links = linkHeader(res)
       val ary = json match {
@@ -32,8 +32,8 @@ object Paged {
       Paged(ary.toVector map Converter.fromJsonUnsafe[A], links, None, None)
     }
 
-  def parseSearchResult[A: JsonFormat]: Response => Paged[A] =
-    (res: Response) => {
+  def parseSearchResult[A: JsonFormat]: FullResponse => Paged[A] =
+    (res: FullResponse) => {
       val json = Github.asJson(res)
       val links = linkHeader(res)
       val fields = json match {
@@ -62,7 +62,7 @@ object Paged {
       Paged(xs, links, total_count, incomplete_results)
     }
 
-  def linkHeader(res: Response): Map[String, String] =
+  def linkHeader(res: FullResponse): Map[String, String] =
     Map((res.header("Link") match {
       case Some(s) =>
         s.split(",").toList flatMap { x => x.split(";").toList match {

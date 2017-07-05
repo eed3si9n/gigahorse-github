@@ -84,15 +84,21 @@ object OAuthClient {
 object OAuth {
   import scala.concurrent._
   import scala.concurrent.duration._
-  def authorizations: Request = Gigahorse.url("https://api.github.com/authorizations")
+  def authorizations: Request = GigahorseSupport.url("https://api.github.com/authorizations")
+
   /* Fetches a new access token given a gh username and password
    *  and optional list of scopes */
-  def accessToken(user: String, pass: String, scopes: Seq[String] = Nil): String =
-    Gigahorse.withHttp { http =>
-      val r = authorizations.withAuth(user, pass).post("""{"scopes":[%s]}""".format(
-        scopes.mkString("\"","\",","\"")
-      ))
-      val f = http.run(r, Github.asAuthorization)
-      Await.result(f, Duration.Inf).token
-    }
+  def accessToken(user: String, pass: String, scopes: Seq[String] = Nil): Request =
+    authorizations.withAuth(user, pass).post("""{"scopes":[%s]}""".format(
+      scopes.mkString("\"","\",","\"")
+    ))
+
+  // def accessToken(user: String, pass: String, scopes: Seq[String] = Nil): String =
+  //   Gigahorse.withHttp { http =>
+  //     val r = authorizations.withAuth(user, pass).post("""{"scopes":[%s]}""".format(
+  //       scopes.mkString("\"","\",","\"")
+  //     ))
+  //     val f = http.run(r, Github.asAuthorization)
+  //     Await.result(f, Duration.Inf).token
+  //   }
 }

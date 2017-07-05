@@ -5,7 +5,7 @@ import github.{ response => res }
 import request.{ Repos, Issues, UrlBuilder, Users, Search }
 import sjsonnew.JsonFormat
 import sjsonnew.support.scalajson.unsafe.Converter
-import scala.json.ast.unsafe.JValue
+import scalajson.ast.unsafe.JValue
 import java.nio.ByteBuffer
 
 abstract class Github {
@@ -35,37 +35,38 @@ abstract class Github {
   type IssueState = gigahorse.github.response.IssueState
   val IssueState = gigahorse.github.response.IssueState
 
-  val asString: Response => String = Gigahorse.asString
-  val asJson: Response => JValue =
-    (r: Response) => {
+  val asString: FullResponse => String = GigahorseSupport.asString
+  val asJson: FullResponse => JValue =
+    (r: FullResponse) => {
       import sjsonnew.support.scalajson.unsafe.Parser
-      val buffer = ByteBuffer.wrap(r.bodyAsBytes)
+      val buffer = r.bodyAsByteBuffer
       Parser.parseFromByteBuffer(buffer).get
     }
-  def as[A: JsonFormat]: Response => A =
+  def as[A: JsonFormat]: FullResponse => A =
     asJson andThen Converter.fromJsonUnsafe[A]
-  val asAuthorization: Response => res.Authorization = as[res.Authorization]
-  val asRepo: Response => res.Repo                   = as[res.Repo]
-  val asRepos: Response => res.Paged[res.Repo]       = res.Paged.parseArray[res.Repo]
-  val asGitRef: Response => res.GitRef               = as[res.GitRef]
-  val asGitRefs: Response => res.Paged[res.GitRef]   = res.Paged.parseArray[res.GitRef]
-  val asGitCommit: Response => res.GitCommit         = as[res.GitCommit]
-  val asGitTrees: Response => res.GitTrees           = as[res.GitTrees]
-  val asGitBlob: Response => res.GitBlob             = as[res.GitBlob]
-  val asIssues: Response => res.Paged[res.Issue]     = res.Paged.parseArray[res.Issue]
-  val asUser: Response => res.User                   = as[res.User]
-  val asUsers: Response => res.Paged[res.User]       = res.Paged.parseArray[res.User]
-  val asOrgs: Response => res.Paged[res.User]        = asUsers
+  val asAuthorization: FullResponse => res.Authorization = as[res.Authorization]
+  val asToken: FullResponse => String                    = asAuthorization andThen { _.token }
+  val asRepo: FullResponse => res.Repo                   = as[res.Repo]
+  val asRepos: FullResponse => res.Paged[res.Repo]       = res.Paged.parseArray[res.Repo]
+  val asGitRef: FullResponse => res.GitRef               = as[res.GitRef]
+  val asGitRefs: FullResponse => res.Paged[res.GitRef]   = res.Paged.parseArray[res.GitRef]
+  val asGitCommit: FullResponse => res.GitCommit         = as[res.GitCommit]
+  val asGitTrees: FullResponse => res.GitTrees           = as[res.GitTrees]
+  val asGitBlob: FullResponse => res.GitBlob             = as[res.GitBlob]
+  val asIssues: FullResponse => res.Paged[res.Issue]     = res.Paged.parseArray[res.Issue]
+  val asUser: FullResponse => res.User                   = as[res.User]
+  val asUsers: FullResponse => res.Paged[res.User]       = res.Paged.parseArray[res.User]
+  val asOrgs: FullResponse => res.Paged[res.User]        = asUsers
 
-  val asReposSearch: Response => res.Paged[res.Repo] =
+  val asReposSearch: FullResponse => res.Paged[res.Repo] =
     res.Paged.parseSearchResult[res.Repo]
-  val asCodeSearch: Response => res.Paged[res.BlobRef] =
+  val asCodeSearch: FullResponse => res.Paged[res.BlobRef] =
     res.Paged.parseSearchResult[res.BlobRef]
-  val asIssuesSearch: Response => res.Paged[res.Issue] =
+  val asIssuesSearch: FullResponse => res.Paged[res.Issue] =
     res.Paged.parseSearchResult[res.Issue]
-  val asUsersSearch: Response => res.Paged[res.User] =
+  val asUsersSearch: FullResponse => res.Paged[res.User] =
     res.Paged.parseSearchResult[res.User]
-  val asTextMatches: Response => res.Paged[res.TextMatches] =
+  val asTextMatches: FullResponse => res.Paged[res.TextMatches] =
     res.Paged.parseSearchResult[res.TextMatches]
 }
 
