@@ -6,7 +6,7 @@ gigahorse-github is a Gigahorse plugin for github API v3.
 ## setup
 
 ```scala
-libraryDependencies += "com.eed3si9n" %% "gigahorse-github" % "gigahorse0.3.1_0.2.0"
+libraryDependencies ++= List"com.eed3si9n" %% "gigahorse-github" % "gigahorse0.3.1_0.2.0", "com.eed3si9n" %% "gigahorse-okhttp" % "0.3.1")
 ```
 
 ## authentication
@@ -39,6 +39,8 @@ now we can hit the GitHub API using the token:
 ```scala
 scala> import gigahorse._, support.okhttp.Gigahorse
 import gigahorse._
+
+scala> import gigahorse.github.Github
 import gigahorse.github.Github
 
 scala> import scala.concurrent._, duration._
