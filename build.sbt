@@ -16,8 +16,8 @@ lazy val root = (project in file(".")).
     inThisBuild(List(
       version := s"gigahorse${gigahorseVersion}_${baseVersion}",
       organization := "com.eed3si9n",
-      scalaVersion := "2.12.2",
-      crossScalaVersions := Seq("2.12.2", "2.11.11", "2.10.6"),
+      scalaVersion := "2.12.6",
+      crossScalaVersions := Seq("2.12.6", "2.11.12", "2.10.7"),
       organizationName := "eed3si9n",
       organizationHomepage := Some(url("http://eed3si9n.com/")),
       homepage := Some(url("https://github.com/eed3si9n/gigahorse-github")),
@@ -29,8 +29,8 @@ lazy val root = (project in file(".")).
       licenses := Seq("Apache 2" -> new URL("http://www.apache.org/licenses/LICENSE-2.0.txt"))
     )),
     name := "gigahorse-github-root",
-    publish := (),
-    publishLocal := ()
+    publish := (()),
+    publishLocal := (())
   ).aggregate(core)
 
 lazy val core = (project in file("core")).
@@ -55,5 +55,5 @@ lazy val core = (project in file("core")).
     // You need this otherwise you get X is already defined as class.
     sources in Compile := (sources in Compile).value.toList.distinct,
     resolvers += Resolver.sonatypeRepo("public"),
-    crossScalaVersions := Seq("2.12.2", "2.11.11", "2.10.6")
+    crossScalaVersions := Seq("2.12.6", "2.11.12", "2.10.7")
   )

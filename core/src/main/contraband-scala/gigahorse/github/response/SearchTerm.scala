@@ -15,12 +15,12 @@ final class SearchTerm private (
     case _ => false
   }
   override def hashCode: Int = {
-    37 * (37 * (37 * (17 + "SearchTerm".##) + text.##) + indices.##)
+    37 * (37 * (37 * (17 + "gigahorse.github.response.SearchTerm".##) + text.##) + indices.##)
   }
   override def toString: String = {
     "SearchTerm(" + text + ", " + indices + ")"
   }
-  protected[this] def copy(text: String = text, indices: Vector[Int] = indices): SearchTerm = {
+  private[this] def copy(text: String = text, indices: Vector[Int] = indices): SearchTerm = {
     new SearchTerm(text, indices)
   }
   def withText(text: String): SearchTerm = {

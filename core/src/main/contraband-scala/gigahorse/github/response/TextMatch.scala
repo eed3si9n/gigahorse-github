@@ -18,12 +18,12 @@ final class TextMatch private (
     case _ => false
   }
   override def hashCode: Int = {
-    37 * (37 * (37 * (37 * (37 * (37 * (17 + "TextMatch".##) + object_url.##) + object_type.##) + property.##) + fragment.##) + matches.##)
+    37 * (37 * (37 * (37 * (37 * (37 * (17 + "gigahorse.github.response.TextMatch".##) + object_url.##) + object_type.##) + property.##) + fragment.##) + matches.##)
   }
   override def toString: String = {
     "TextMatch(" + object_url + ", " + object_type + ", " + property + ", " + fragment + ", " + matches + ")"
   }
-  protected[this] def copy(object_url: String = object_url, object_type: String = object_type, property: String = property, fragment: String = fragment, matches: Vector[gigahorse.github.response.SearchTerm] = matches): TextMatch = {
+  private[this] def copy(object_url: String = object_url, object_type: String = object_type, property: String = property, fragment: String = fragment, matches: Vector[gigahorse.github.response.SearchTerm] = matches): TextMatch = {
     new TextMatch(object_url, object_type, property, fragment, matches)
   }
   def withObject_url(object_url: String): TextMatch = {

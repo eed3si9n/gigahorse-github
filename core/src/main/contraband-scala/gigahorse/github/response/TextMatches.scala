@@ -14,12 +14,12 @@ final class TextMatches private (
     case _ => false
   }
   override def hashCode: Int = {
-    37 * (37 * (17 + "TextMatches".##) + text_matches.##)
+    37 * (37 * (17 + "gigahorse.github.response.TextMatches".##) + text_matches.##)
   }
   override def toString: String = {
     "TextMatches(" + text_matches + ")"
   }
-  protected[this] def copy(text_matches: Vector[gigahorse.github.response.TextMatch] = text_matches): TextMatches = {
+  private[this] def copy(text_matches: Vector[gigahorse.github.response.TextMatch] = text_matches): TextMatches = {
     new TextMatches(text_matches)
   }
   def withText_matches(text_matches: Vector[gigahorse.github.response.TextMatch]): TextMatches = {

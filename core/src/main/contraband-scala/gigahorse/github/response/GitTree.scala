@@ -19,12 +19,12 @@ final class GitTree private (
     case _ => false
   }
   override def hashCode: Int = {
-    37 * (37 * (37 * (37 * (37 * (37 * (37 * (17 + "GitTree".##) + url.##) + sha.##) + path.##) + mode.##) + `type`.##) + size.##)
+    37 * (37 * (37 * (37 * (37 * (37 * (37 * (17 + "gigahorse.github.response.GitTree".##) + url.##) + sha.##) + path.##) + mode.##) + `type`.##) + size.##)
   }
   override def toString: String = {
     "GitTree(" + url + ", " + sha + ", " + path + ", " + mode + ", " + `type` + ", " + size + ")"
   }
-  protected[this] def copy(url: String = url, sha: String = sha, path: String = path, mode: String = mode, `type`: String = `type`, size: Option[Long] = size): GitTree = {
+  private[this] def copy(url: String = url, sha: String = sha, path: String = path, mode: String = mode, `type`: String = `type`, size: Option[Long] = size): GitTree = {
     new GitTree(url, sha, path, mode, `type`, size)
   }
   def withUrl(url: String): GitTree = {
@@ -51,7 +51,7 @@ final class GitTree private (
 }
 object GitTree {
   
-  def apply(url: String, sha: String, path: String, mode: String, `type`: String): GitTree = new GitTree(url, sha, path, mode, `type`, None)
+  def apply(url: String, sha: String, path: String, mode: String, `type`: String): GitTree = new GitTree(url, sha, path, mode, `type`)
   def apply(url: String, sha: String, path: String, mode: String, `type`: String, size: Option[Long]): GitTree = new GitTree(url, sha, path, mode, `type`, size)
   def apply(url: String, sha: String, path: String, mode: String, `type`: String, size: Long): GitTree = new GitTree(url, sha, path, mode, `type`, Option(size))
 }

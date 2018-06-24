@@ -16,12 +16,12 @@ final class Label private (
     case _ => false
   }
   override def hashCode: Int = {
-    37 * (37 * (37 * (37 * (17 + "Label".##) + url.##) + name.##) + color.##)
+    37 * (37 * (37 * (37 * (17 + "gigahorse.github.response.Label".##) + url.##) + name.##) + color.##)
   }
   override def toString: String = {
     "Label(" + url + ", " + name + ", " + color + ")"
   }
-  protected[this] def copy(url: String = url, name: String = name, color: String = color): Label = {
+  private[this] def copy(url: String = url, name: String = name, color: String = color): Label = {
     new Label(url, name, color)
   }
   def withUrl(url: String): Label = {

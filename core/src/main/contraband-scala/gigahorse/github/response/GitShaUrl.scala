@@ -15,12 +15,12 @@ final class GitShaUrl private (
     case _ => false
   }
   override def hashCode: Int = {
-    37 * (37 * (37 * (17 + "GitShaUrl".##) + url.##) + sha.##)
+    37 * (37 * (37 * (17 + "gigahorse.github.response.GitShaUrl".##) + url.##) + sha.##)
   }
   override def toString: String = {
     "GitShaUrl(" + url + ", " + sha + ")"
   }
-  protected[this] def copy(url: String = url, sha: String = sha): GitShaUrl = {
+  private[this] def copy(url: String = url, sha: String = sha): GitShaUrl = {
     new GitShaUrl(url, sha)
   }
   def withUrl(url: String): GitShaUrl = {
