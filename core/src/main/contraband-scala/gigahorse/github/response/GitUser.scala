@@ -16,12 +16,12 @@ final class GitUser private (
     case _ => false
   }
   override def hashCode: Int = {
-    37 * (37 * (37 * (37 * (17 + "GitUser".##) + name.##) + email.##) + date.##)
+    37 * (37 * (37 * (37 * (17 + "gigahorse.github.response.GitUser".##) + name.##) + email.##) + date.##)
   }
   override def toString: String = {
     "GitUser(" + name + ", " + email + ", " + date + ")"
   }
-  protected[this] def copy(name: String = name, email: String = email, date: java.util.Calendar = date): GitUser = {
+  private[this] def copy(name: String = name, email: String = email, date: java.util.Calendar = date): GitUser = {
     new GitUser(name, email, date)
   }
   def withName(name: String): GitUser = {

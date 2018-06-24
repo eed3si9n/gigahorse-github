@@ -28,12 +28,12 @@ final class Issue private (
     case _ => false
   }
   override def hashCode: Int = {
-    37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (17 + "Issue".##) + url.##) + html_url.##) + number.##) + state.##) + title.##) + body.##) + user.##) + labels.##) + assignee.##) + Milestone.##) + comments.##) + pull_request.##) + closed_at.##) + created_at.##) + updated_at.##)
+    37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (17 + "gigahorse.github.response.Issue".##) + url.##) + html_url.##) + number.##) + state.##) + title.##) + body.##) + user.##) + labels.##) + assignee.##) + Milestone.##) + comments.##) + pull_request.##) + closed_at.##) + created_at.##) + updated_at.##)
   }
   override def toString: String = {
     "Issue(" + url + ", " + html_url + ", " + number + ", " + state + ", " + title + ", " + body + ", " + user + ", " + labels + ", " + assignee + ", " + Milestone + ", " + comments + ", " + pull_request + ", " + closed_at + ", " + created_at + ", " + updated_at + ")"
   }
-  protected[this] def copy(url: String = url, html_url: Option[String] = html_url, number: Option[Long] = number, state: Option[gigahorse.github.response.IssueState] = state, title: Option[String] = title, body: Option[String] = body, user: Option[gigahorse.github.response.User] = user, labels: Vector[gigahorse.github.response.Label] = labels, assignee: Option[gigahorse.github.response.User] = assignee, Milestone: Option[gigahorse.github.response.Milestone] = Milestone, comments: Option[Long] = comments, pull_request: Option[gigahorse.github.response.PullRequest] = pull_request, closed_at: Option[java.util.Calendar] = closed_at, created_at: Option[java.util.Calendar] = created_at, updated_at: Option[java.util.Calendar] = updated_at): Issue = {
+  private[this] def copy(url: String = url, html_url: Option[String] = html_url, number: Option[Long] = number, state: Option[gigahorse.github.response.IssueState] = state, title: Option[String] = title, body: Option[String] = body, user: Option[gigahorse.github.response.User] = user, labels: Vector[gigahorse.github.response.Label] = labels, assignee: Option[gigahorse.github.response.User] = assignee, Milestone: Option[gigahorse.github.response.Milestone] = Milestone, comments: Option[Long] = comments, pull_request: Option[gigahorse.github.response.PullRequest] = pull_request, closed_at: Option[java.util.Calendar] = closed_at, created_at: Option[java.util.Calendar] = created_at, updated_at: Option[java.util.Calendar] = updated_at): Issue = {
     new Issue(url, html_url, number, state, title, body, user, labels, assignee, Milestone, comments, pull_request, closed_at, created_at, updated_at)
   }
   def withUrl(url: String): Issue = {
@@ -123,7 +123,7 @@ final class Issue private (
 }
 object Issue {
   
-  def apply(url: String): Issue = new Issue(url, None, None, None, None, None, None, Vector(), None, None, None, None, None, None, None)
+  def apply(url: String): Issue = new Issue(url)
   def apply(url: String, html_url: Option[String], number: Option[Long], state: Option[gigahorse.github.response.IssueState], title: Option[String], body: Option[String], user: Option[gigahorse.github.response.User], labels: Vector[gigahorse.github.response.Label], assignee: Option[gigahorse.github.response.User], Milestone: Option[gigahorse.github.response.Milestone], comments: Option[Long], pull_request: Option[gigahorse.github.response.PullRequest], closed_at: Option[java.util.Calendar], created_at: Option[java.util.Calendar], updated_at: Option[java.util.Calendar]): Issue = new Issue(url, html_url, number, state, title, body, user, labels, assignee, Milestone, comments, pull_request, closed_at, created_at, updated_at)
   def apply(url: String, html_url: String, number: Long, state: gigahorse.github.response.IssueState, title: String, body: String, user: gigahorse.github.response.User, labels: Vector[gigahorse.github.response.Label], assignee: gigahorse.github.response.User, Milestone: gigahorse.github.response.Milestone, comments: Long, pull_request: gigahorse.github.response.PullRequest, closed_at: java.util.Calendar, created_at: java.util.Calendar, updated_at: java.util.Calendar): Issue = new Issue(url, Option(html_url), Option(number), Option(state), Option(title), Option(body), Option(user), labels, Option(assignee), Option(Milestone), Option(comments), Option(pull_request), Option(closed_at), Option(created_at), Option(updated_at))
 }

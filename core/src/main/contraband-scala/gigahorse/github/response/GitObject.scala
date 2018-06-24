@@ -16,12 +16,12 @@ final class GitObject private (
     case _ => false
   }
   override def hashCode: Int = {
-    37 * (37 * (37 * (37 * (17 + "GitObject".##) + url.##) + sha.##) + `type`.##)
+    37 * (37 * (37 * (37 * (17 + "gigahorse.github.response.GitObject".##) + url.##) + sha.##) + `type`.##)
   }
   override def toString: String = {
     "GitObject(" + url + ", " + sha + ", " + `type` + ")"
   }
-  protected[this] def copy(url: String = url, sha: String = sha, `type`: String = `type`): GitObject = {
+  private[this] def copy(url: String = url, sha: String = sha, `type`: String = `type`): GitObject = {
     new GitObject(url, sha, `type`)
   }
   def withUrl(url: String): GitObject = {

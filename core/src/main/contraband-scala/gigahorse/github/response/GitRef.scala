@@ -16,12 +16,12 @@ final class GitRef private (
     case _ => false
   }
   override def hashCode: Int = {
-    37 * (37 * (37 * (37 * (17 + "GitRef".##) + url.##) + ref.##) + `object`.##)
+    37 * (37 * (37 * (37 * (17 + "gigahorse.github.response.GitRef".##) + url.##) + ref.##) + `object`.##)
   }
   override def toString: String = {
     "GitRef(" + url + ", " + ref + ", " + `object` + ")"
   }
-  protected[this] def copy(url: String = url, ref: String = ref, `object`: gigahorse.github.response.GitObject = `object`): GitRef = {
+  private[this] def copy(url: String = url, ref: String = ref, `object`: gigahorse.github.response.GitObject = `object`): GitRef = {
     new GitRef(url, ref, `object`)
   }
   def withUrl(url: String): GitRef = {

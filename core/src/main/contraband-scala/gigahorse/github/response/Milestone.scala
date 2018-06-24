@@ -17,12 +17,12 @@ final class Milestone private (
     case _ => false
   }
   override def hashCode: Int = {
-    37 * (37 * (37 * (37 * (37 * (17 + "Milestone".##) + url.##) + number.##) + state.##) + title.##)
+    37 * (37 * (37 * (37 * (37 * (17 + "gigahorse.github.response.Milestone".##) + url.##) + number.##) + state.##) + title.##)
   }
   override def toString: String = {
     "Milestone(" + url + ", " + number + ", " + state + ", " + title + ")"
   }
-  protected[this] def copy(url: String = url, number: Long = number, state: String = state, title: String = title): Milestone = {
+  private[this] def copy(url: String = url, number: Long = number, state: String = state, title: String = title): Milestone = {
     new Milestone(url, number, state, title)
   }
   def withUrl(url: String): Milestone = {

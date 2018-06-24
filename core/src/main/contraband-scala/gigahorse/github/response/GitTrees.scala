@@ -16,12 +16,12 @@ final class GitTrees private (
     case _ => false
   }
   override def hashCode: Int = {
-    37 * (37 * (37 * (37 * (17 + "GitTrees".##) + url.##) + sha.##) + tree.##)
+    37 * (37 * (37 * (37 * (17 + "gigahorse.github.response.GitTrees".##) + url.##) + sha.##) + tree.##)
   }
   override def toString: String = {
     "GitTrees(" + url + ", " + sha + ", " + tree + ")"
   }
-  protected[this] def copy(url: String = url, sha: String = sha, tree: Vector[gigahorse.github.response.GitTree] = tree): GitTrees = {
+  private[this] def copy(url: String = url, sha: String = sha, tree: Vector[gigahorse.github.response.GitTree] = tree): GitTrees = {
     new GitTrees(url, sha, tree)
   }
   def withUrl(url: String): GitTrees = {

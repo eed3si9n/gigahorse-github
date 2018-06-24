@@ -19,12 +19,12 @@ final class GitCommit private (
     case _ => false
   }
   override def hashCode: Int = {
-    37 * (37 * (37 * (37 * (37 * (37 * (37 * (17 + "GitCommit".##) + url.##) + sha.##) + committer.##) + message.##) + tree.##) + parents.##)
+    37 * (37 * (37 * (37 * (37 * (37 * (37 * (17 + "gigahorse.github.response.GitCommit".##) + url.##) + sha.##) + committer.##) + message.##) + tree.##) + parents.##)
   }
   override def toString: String = {
     "GitCommit(" + url + ", " + sha + ", " + committer + ", " + message + ", " + tree + ", " + parents + ")"
   }
-  protected[this] def copy(url: String = url, sha: String = sha, committer: gigahorse.github.response.GitUser = committer, message: String = message, tree: gigahorse.github.response.GitShaUrl = tree, parents: Vector[gigahorse.github.response.GitShaUrl] = parents): GitCommit = {
+  private[this] def copy(url: String = url, sha: String = sha, committer: gigahorse.github.response.GitUser = committer, message: String = message, tree: gigahorse.github.response.GitShaUrl = tree, parents: Vector[gigahorse.github.response.GitShaUrl] = parents): GitCommit = {
     new GitCommit(url, sha, committer, message, tree, parents)
   }
   def withUrl(url: String): GitCommit = {

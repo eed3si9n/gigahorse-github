@@ -28,12 +28,12 @@ final class GitBlob private (
     case _ => false
   }
   override def hashCode: Int = {
-    37 * (37 * (37 * (37 * (37 * (37 * (17 + "GitBlob".##) + url.##) + sha.##) + encoding.##) + content.##) + size.##)
+    37 * (37 * (37 * (37 * (37 * (37 * (17 + "gigahorse.github.response.GitBlob".##) + url.##) + sha.##) + encoding.##) + content.##) + size.##)
   }
   override def toString: String = {
     "GitBlob(" + url + ", " + sha + ", " + encoding + ", " + content + ", " + size + ")"
   }
-  protected[this] def copy(url: String = url, sha: String = sha, encoding: String = encoding, content: String = content, size: Option[Long] = size): GitBlob = {
+  private[this] def copy(url: String = url, sha: String = sha, encoding: String = encoding, content: String = content, size: Option[Long] = size): GitBlob = {
     new GitBlob(url, sha, encoding, content, size)
   }
   def withUrl(url: String): GitBlob = {

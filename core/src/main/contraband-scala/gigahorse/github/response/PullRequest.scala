@@ -17,12 +17,12 @@ final class PullRequest private (
     case _ => false
   }
   override def hashCode: Int = {
-    37 * (37 * (37 * (37 * (37 * (17 + "PullRequest".##) + url.##) + html_url.##) + diff_url.##) + patch_url.##)
+    37 * (37 * (37 * (37 * (37 * (17 + "gigahorse.github.response.PullRequest".##) + url.##) + html_url.##) + diff_url.##) + patch_url.##)
   }
   override def toString: String = {
     "PullRequest(" + url + ", " + html_url + ", " + diff_url + ", " + patch_url + ")"
   }
-  protected[this] def copy(url: String = url, html_url: Option[String] = html_url, diff_url: Option[String] = diff_url, patch_url: Option[String] = patch_url): PullRequest = {
+  private[this] def copy(url: String = url, html_url: Option[String] = html_url, diff_url: Option[String] = diff_url, patch_url: Option[String] = patch_url): PullRequest = {
     new PullRequest(url, html_url, diff_url, patch_url)
   }
   def withUrl(url: String): PullRequest = {
@@ -49,8 +49,8 @@ final class PullRequest private (
 }
 object PullRequest {
   
-  def apply(url: String, html_url: Option[String]): PullRequest = new PullRequest(url, html_url, None, None)
-  def apply(url: String, html_url: String): PullRequest = new PullRequest(url, Option(html_url), None, None)
+  def apply(url: String, html_url: Option[String]): PullRequest = new PullRequest(url, html_url)
+  def apply(url: String, html_url: String): PullRequest = new PullRequest(url, Option(html_url))
   def apply(url: String, html_url: Option[String], diff_url: Option[String], patch_url: Option[String]): PullRequest = new PullRequest(url, html_url, diff_url, patch_url)
   def apply(url: String, html_url: String, diff_url: String, patch_url: String): PullRequest = new PullRequest(url, Option(html_url), Option(diff_url), Option(patch_url))
 }

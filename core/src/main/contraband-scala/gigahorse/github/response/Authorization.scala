@@ -23,12 +23,12 @@ final class Authorization private (
     case _ => false
   }
   override def hashCode: Int = {
-    37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (17 + "Authorization".##) + url.##) + id.##) + scopes.##) + token.##) + token_last_eight.##) + hashed_token.##) + note.##) + note_url.##) + created_at.##) + updated_at.##)
+    37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (17 + "gigahorse.github.response.Authorization".##) + url.##) + id.##) + scopes.##) + token.##) + token_last_eight.##) + hashed_token.##) + note.##) + note_url.##) + created_at.##) + updated_at.##)
   }
   override def toString: String = {
     "Authorization(" + url + ", " + id + ", " + scopes + ", " + token + ", " + token_last_eight + ", " + hashed_token + ", " + note + ", " + note_url + ", " + created_at + ", " + updated_at + ")"
   }
-  protected[this] def copy(url: String = url, id: Long = id, scopes: Vector[String] = scopes, token: String = token, token_last_eight: String = token_last_eight, hashed_token: String = hashed_token, note: Option[String] = note, note_url: Option[String] = note_url, created_at: Option[java.util.Calendar] = created_at, updated_at: Option[java.util.Calendar] = updated_at): Authorization = {
+  private[this] def copy(url: String = url, id: Long = id, scopes: Vector[String] = scopes, token: String = token, token_last_eight: String = token_last_eight, hashed_token: String = hashed_token, note: Option[String] = note, note_url: Option[String] = note_url, created_at: Option[java.util.Calendar] = created_at, updated_at: Option[java.util.Calendar] = updated_at): Authorization = {
     new Authorization(url, id, scopes, token, token_last_eight, hashed_token, note, note_url, created_at, updated_at)
   }
   def withUrl(url: String): Authorization = {
@@ -76,7 +76,7 @@ final class Authorization private (
 }
 object Authorization {
   
-  def apply(url: String, id: Long, scopes: Vector[String], token: String, token_last_eight: String, hashed_token: String): Authorization = new Authorization(url, id, scopes, token, token_last_eight, hashed_token, None, None, None, None)
+  def apply(url: String, id: Long, scopes: Vector[String], token: String, token_last_eight: String, hashed_token: String): Authorization = new Authorization(url, id, scopes, token, token_last_eight, hashed_token)
   def apply(url: String, id: Long, scopes: Vector[String], token: String, token_last_eight: String, hashed_token: String, note: Option[String], note_url: Option[String], created_at: Option[java.util.Calendar], updated_at: Option[java.util.Calendar]): Authorization = new Authorization(url, id, scopes, token, token_last_eight, hashed_token, note, note_url, created_at, updated_at)
   def apply(url: String, id: Long, scopes: Vector[String], token: String, token_last_eight: String, hashed_token: String, note: String, note_url: String, created_at: java.util.Calendar, updated_at: java.util.Calendar): Authorization = new Authorization(url, id, scopes, token, token_last_eight, hashed_token, Option(note), Option(note_url), Option(created_at), Option(updated_at))
 }

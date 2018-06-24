@@ -23,12 +23,12 @@ final class User private (
     case _ => false
   }
   override def hashCode: Int = {
-    37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (17 + "User".##) + url.##) + login.##) + id.##) + html_url.##) + avatar_url.##) + gravatar_id.##) + `type`.##) + site_admin.##) + name.##) + email.##)
+    37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (17 + "gigahorse.github.response.User".##) + url.##) + login.##) + id.##) + html_url.##) + avatar_url.##) + gravatar_id.##) + `type`.##) + site_admin.##) + name.##) + email.##)
   }
   override def toString: String = {
     "User(" + url + ", " + login + ", " + id + ", " + html_url + ", " + avatar_url + ", " + gravatar_id + ", " + `type` + ", " + site_admin + ", " + name + ", " + email + ")"
   }
-  protected[this] def copy(url: String = url, login: String = login, id: Long = id, html_url: Option[String] = html_url, avatar_url: Option[String] = avatar_url, gravatar_id: Option[String] = gravatar_id, `type`: Option[String] = `type`, site_admin: Option[Boolean] = site_admin, name: Option[String] = name, email: Option[String] = email): User = {
+  private[this] def copy(url: String = url, login: String = login, id: Long = id, html_url: Option[String] = html_url, avatar_url: Option[String] = avatar_url, gravatar_id: Option[String] = gravatar_id, `type`: Option[String] = `type`, site_admin: Option[Boolean] = site_admin, name: Option[String] = name, email: Option[String] = email): User = {
     new User(url, login, id, html_url, avatar_url, gravatar_id, `type`, site_admin, name, email)
   }
   def withUrl(url: String): User = {
@@ -85,7 +85,7 @@ final class User private (
 }
 object User {
   
-  def apply(url: String, login: String, id: Long): User = new User(url, login, id, None, None, None, None, None, None, None)
+  def apply(url: String, login: String, id: Long): User = new User(url, login, id)
   def apply(url: String, login: String, id: Long, html_url: Option[String], avatar_url: Option[String], gravatar_id: Option[String], `type`: Option[String], site_admin: Option[Boolean], name: Option[String], email: Option[String]): User = new User(url, login, id, html_url, avatar_url, gravatar_id, `type`, site_admin, name, email)
   def apply(url: String, login: String, id: Long, html_url: String, avatar_url: String, gravatar_id: String, `type`: String, site_admin: Boolean, name: String, email: String): User = new User(url, login, id, Option(html_url), Option(avatar_url), Option(gravatar_id), Option(`type`), Option(site_admin), Option(name), Option(email))
 }
